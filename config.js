@@ -666,7 +666,7 @@ const CONFIG = {
         "longLabel": "Long-form",
         "shortLabel": "Short-form",
         "emptyText": "No videos in this category yet.",
-        "subtitle": "A selection of my recent editing work.",
+        "subtitle": "Some of my recent editing work.",
         "showSubtitle": true,
         "titleVisible": true,
         "longVisible": true,
