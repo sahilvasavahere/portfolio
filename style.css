@@ -930,6 +930,14 @@ body:has(.mobile-menu.open)::after{content:"";position:fixed;top:64px;left:0;rig
 @media(max-width:479px){
   #projectGridShort,#workGridShort{max-width:320px;margin-inline:auto}
 }
+/* MOBILE 2-COL FIX — below 480px both grids stay 2 columns (compact,
+   scannable; 16:9 thumbs hold at ~140-173px). Full selector lists mirror
+   the MASTER GRID base so class-only and id-only grids are both covered.
+   Nothing above 480px changes. */
+@media(max-width:480px){
+  .grid-long,#workGridLong,#projectGridLong{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+}
 /* Card dims never vw-scaled: fr width + aspect-ratio height only, fixed px internals.
    Work Long gap 20px desktop (20px spec, token 20); Short gap 20px (in 20-24 spec). */
 .card{width:100%;min-width:0;overflow:hidden;border-radius:14px;border:1px solid var(--border)}
