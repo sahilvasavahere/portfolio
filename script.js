@@ -143,6 +143,14 @@ function renderGrid(projects, gridEl){
     const alt = (p.thumbnailAlt || p.title || "").replace(/"/g,'&quot;');
     const desc = (p.description||"").replace(/"/g,'&quot;');
     const fit = p.thumbnailFit || 'cover';
+    // Focal anchor (face-aware, editor-computed, stored on project data).
+    // Absent/invalid = center (existing behavior). Single shared renderer:
+    // Home + Work + filters + lightbox thumbs stay consistent by construction.
+    const _fc = p.focus || {};
+    const _fx = parseFloat(_fc.x), _fy = parseFloat(_fc.y);
+    const focusPos = (isFinite(_fx) && isFinite(_fy))
+      ? `${Math.min(1, Math.max(0, _fx)) * 100}% ${Math.min(1, Math.max(0, _fy)) * 100}%`
+      : 'center';
     const cardLabel = ((isVideo ? 'Play ' : 'View ') + (p.title || 'Untitled')).replace(/"/g, '&quot;');
     const title = d.title===false ? '' : `<h3>${(p.title||"Untitled").replace(/</g,'&lt;')}</h3>`;
     const meta = d.meta===false ? '' : `<p>${(p.meta||"").replace(/</g,'&lt;')}</p>`;
@@ -150,7 +158,7 @@ function renderGrid(projects, gridEl){
     return `
     <article class="card" data-youtube-url="${youtubeUrl}" data-youtube-id="${yid||""}" data-format="${format}" data-title="${(p.title||"").replace(/"/g,'&quot;')}" data-thumb="${safeThumb}" data-desc="${desc}" data-thumb-alt="${alt}" tabindex="0" role="button" aria-label="${cardLabel}">
       <div class="card-media" style="${showThumb ? '' : 'display:none'}">
-        <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" decoding="async" onerror="handleThumbError(this)" style="object-fit:${fit};${showThumb ? '' : 'display:none'}">
+        <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" decoding="async" onerror="handleThumbError(this)" style="object-fit:${fit};object-position:${focusPos};${showThumb ? '' : 'display:none'}">
         ${badge}
         ${play}
       </div>
@@ -782,6 +790,13 @@ function renderSite(){
       } else {
         const imgSrc = c.about?.image || "";
         aboutImg.src = imgSrc || PLACEHOLDER_SVG;
+        // Same focal model as project thumbs (about.focus, editor-computed).
+        try{
+          const _afx = parseFloat(c.about?.focus?.x), _afy = parseFloat(c.about?.focus?.y);
+          aboutImg.style.objectPosition = (isFinite(_afx) && isFinite(_afy))
+            ? `${Math.min(1, Math.max(0, _afx)) * 100}% ${Math.min(1, Math.max(0, _afy)) * 100}%`
+            : 'center';
+        }catch(_){}
         aboutImg.alt = c.about?.imageAlt || c.about?.title || "About photo";
         aboutImg.onerror = function(){ this.onerror=null; this.src = PLACEHOLDER_SVG; };
         aboutImg.removeAttribute('aria-hidden');
