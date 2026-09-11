@@ -90,10 +90,10 @@ html.motion-enabled .nav.motion-reveal.is-visible{
   transition-duration: var(--motion-standard); /* 260ms ∈ 200-300 */
 }
 
-/* ---- Nav underline: scaleX 180-220ms, center origin ---- */
+/* ---- Nav underline: scaleX+opacity 180-220ms, left origin (matches base) ---- */
 html.motion-enabled .nav-links a::after{
-  transform-origin: center;
-  transition: transform var(--motion-small) var(--motion-ease); /* 200ms */
+  transform-origin: left;
+  transition: transform var(--motion-small) var(--motion-ease), opacity var(--motion-small) var(--motion-ease); /* 200ms */
 }
 
 /* ---- Hero sequence: heading 0 / desc 60 / buttons 120 / stats 180ms ----
@@ -182,14 +182,14 @@ html.motion-enabled .card.motion-reveal .card-media img{
   transform: none;
   filter: none;
 }
-/* Hover scale normalized to 1.04 only (base 1.05-1.06 reverts on removal).
-   Gated to fine pointers so touch never sticks. Load has no img scale. */
+/* Hover scale 1.05 (VISUALREFINEMENT: subtle-at-rest .25 → solid yellow
+   hover 1.05, 180ms). Gated to fine pointers so touch never sticks. */
 @media (hover: hover) and (pointer: fine){
   html.motion-enabled .card:hover .play-badge{
-    transform: scale(1.04);
+    transform: scale(1.05);
   }
   html.motion-enabled .card:hover .card-media img{
-    transform: scale(1.04);
+    transform: none;
   }
 }
 

@@ -40,6 +40,11 @@ function handleThumbError(img){
   const src = img.src || "";
   if(src === custom && yid){
     img.dataset.tried = "custom";
+    img.src = getYouTubeThumb(yid, "maxres");
+    return;
+  }
+  if(src.includes("/maxresdefault.jpg") && yid){
+    img.dataset.tried = "maxres";
     img.src = getYouTubeThumb(yid, "hq");
     return;
   }
@@ -48,7 +53,7 @@ function handleThumbError(img){
     img.src = getYouTubeThumb(yid, "mq");
     return;
   }
-  if(src.includes("mqdefault") || src.includes("maxres")){
+  if(src.includes("mqdefault")){
     img.dataset.tried = "mq";
     img.onerror = null;
     img.src = PLACEHOLDER_SVG;
@@ -56,6 +61,19 @@ function handleThumbError(img){
   }
   img.onerror = null;
   img.src = PLACEHOLDER_SVG;
+}
+
+// YouTube serves HTTP 200 + a 120px gray stub when maxres is missing, so
+// onerror never fires. Step down on load when the decoded image is a stub.
+function thumbQualityCheck(img){
+  try{
+    if((img.src || "").includes("/maxresdefault.jpg")
+      && img.naturalWidth > 0 && img.naturalWidth <= 120
+      && (img.dataset.yid || "")){
+      img.dataset.tried = "maxres";
+      img.src = getYouTubeThumb(img.dataset.yid, "hq");
+    }
+  }catch(_){}
 }
 
 // P2.4 case/text presentation — presentation layer only (CSS text-transform, never content conversion).
@@ -119,6 +137,29 @@ function ensureContactLabels(form){
     el.insertAdjacentElement('beforebegin', label);
   });
 }
+// Focal resolver (single shared path for Home = Work = All/Long/Short).
+// Precedence (short cards): p.focusShort → p.focus → '50% 35%' default.
+// Precedence (long cards): p.focus → 'center'. Explicit values (validated +
+// clamped) are NEVER overwritten by tooling; absent/invalid → safe default.
+// Per-ratio split exists because evidence proved one anchor cannot serve
+// both 16:9 and 9:16 for wide-group/text-heavy art (group shots keep the
+// message centrally; side windows eject faces AND headline). Paint-only
+// (object-position %), no layout, no network, no CV, cover kept in template/CSS.
+function resolveFocusValue(fc){
+  if(!fc || fc.x === undefined || fc.y === undefined) return null;
+  const fx = parseFloat(fc.x), fy = parseFloat(fc.y);
+  if(!isFinite(fx) || !isFinite(fy)) return 'center';
+  return `${Math.min(1, Math.max(0, fx)) * 100}% ${Math.min(1, Math.max(0, fy)) * 100}%`;
+}
+function resolveThumbFocus(p){
+  const short = !!(p && p.format === 'short');
+  if(short){
+    return resolveFocusValue(p.focusShort)
+        || resolveFocusValue(p.focus)
+        || '50% 35%';
+  }
+  return resolveFocusValue(p.focus) || 'center';
+}
 // both pages use one implementation; inputs only, no page assumptions
 // beyond the passed grid element.
 function renderGrid(projects, gridEl){
@@ -133,32 +174,28 @@ function renderGrid(projects, gridEl){
     const d = p.display || {};
     const customThumb = (p.thumbnail||"").trim();
     const showThumb = d.thumbnail!==false;
-    const primaryThumb = showThumb ? (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : PLACEHOLDER_SVG)) : PLACEHOLDER_SVG;
+    const primaryThumb = showThumb ? (customThumb || (isVideo ? getYouTubeThumb(yid, "maxres") : PLACEHOLDER_SVG)) : PLACEHOLDER_SVG;
     const badgeCase = projectBadgeCase(p);
     const badge = d.category===false ? '' : `<span class="badge" style="text-transform:${textCaseToTransform(badgeCase)}">${(p.category || (p.format==='short' ? "Reels" : "Video")).replace(/</g,'&lt;')}</span>`;
     const play = (d.playButton===false || !isVideo) ? '' : `<span class="play-badge">▶</span>`;
     const youtubeUrl = p.youtubeUrl || (yid ? `https://www.youtube.com/watch?v=${yid}` : "");
     const format = p.format || 'long';
-    const safeThumb = (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : "")).replace(/"/g,'&quot;');
+    const safeThumb = (customThumb || (isVideo ? getYouTubeThumb(yid, "maxres") : "")).replace(/"/g,'&quot;');
     const alt = (p.thumbnailAlt || p.title || "").replace(/"/g,'&quot;');
     const desc = (p.description||"").replace(/"/g,'&quot;');
     const fit = p.thumbnailFit || 'cover';
     // Focal anchor (face-aware, editor-computed, stored on project data).
-    // Absent/invalid = center (existing behavior). Single shared renderer:
-    // Home + Work + filters + lightbox thumbs stay consistent by construction.
-    const _fc = p.focus || {};
-    const _fx = parseFloat(_fc.x), _fy = parseFloat(_fc.y);
-    const focusPos = (isFinite(_fx) && isFinite(_fy))
-      ? `${Math.min(1, Math.max(0, _fx)) * 100}% ${Math.min(1, Math.max(0, _fy)) * 100}%`
-      : 'center';
+    // Single shared renderer: Home + Work + filters stay consistent by
+    // construction. Manual values never overwritten (see resolveThumbFocus).
+    const focusPos = resolveThumbFocus(p);
     const cardLabel = ((isVideo ? 'Play ' : 'View ') + (p.title || 'Untitled')).replace(/"/g, '&quot;');
     const title = d.title===false ? '' : `<h3>${(p.title||"Untitled").replace(/</g,'&lt;')}</h3>`;
     const meta = d.meta===false ? '' : `<p>${(p.meta||"").replace(/</g,'&lt;')}</p>`;
-    const descHtml = (d.description===false || !desc) ? '' : `<p style="font-size:11px;color:#71717a;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px">${desc.replace(/</g,'&lt;')}</p>`;
+    const descHtml = (d.description===false || !desc) ? '' : `<p style="font-size:11px;color:#a1a1aa;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px">${desc.replace(/</g,'&lt;')}</p>`;
     return `
     <article class="card" data-youtube-url="${youtubeUrl}" data-youtube-id="${yid||""}" data-format="${format}" data-title="${(p.title||"").replace(/"/g,'&quot;')}" data-thumb="${safeThumb}" data-desc="${desc}" data-thumb-alt="${alt}" tabindex="0" role="button" aria-label="${cardLabel}">
       <div class="card-media" style="${showThumb ? '' : 'display:none'}">
-        <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" decoding="async" onerror="handleThumbError(this)" style="object-fit:${fit};object-position:${focusPos};${showThumb ? '' : 'display:none'}">
+        <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" decoding="async" onerror="handleThumbError(this)" onload="thumbQualityCheck(this)" style="object-fit:${fit};object-position:${focusPos};${showThumb ? '' : 'display:none'}">
         ${badge}
         ${play}
       </div>
@@ -1105,7 +1142,7 @@ function renderSite(){
     }
     if(footerLinksEl){
       if(footerLinksData.length && footerDisp.links!==false){
-        footerLinksEl.innerHTML = footerLinksData.map(l=> `<a href="${l.url.replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="color:#a1a1aa;text-decoration:underline;text-underline-offset:4px;font-size:13px;">${(l.label||'Link').replace(/</g,'&lt;')}</a>`).join('');
+        footerLinksEl.innerHTML = footerLinksData.map(l=> `<a href="${l.url.replace(/"/g,'&quot;')}" target="_blank" rel="noopener" style="color:#d4d4d8;text-decoration:underline;text-underline-offset:4px;font-size:13px;">${(l.label||'Link').replace(/</g,'&lt;')}</a>`).join('');
         footerLinksEl.style.display='flex';
       } else {
         footerLinksEl.innerHTML='';
@@ -1188,6 +1225,10 @@ function renderSite(){
     document.querySelector(`.tab-btn[data-tab="${initialTab}"]`)?.setAttribute('aria-pressed','true');
     gridLong.style.display = initialTab==="long" ? 'grid' : 'none';
     gridShort.style.display = initialTab==="short" ? 'grid' : 'none';
+    try{
+      const viewAllInit = document.getElementById('viewAllWork');
+      if(viewAllInit) viewAllInit.setAttribute('href', 'work.html?filter=' + (initialTab === 'short' ? 'short' : 'long'));
+    }catch(_){}
   } else {
     // No tabs, long grid already shows all
     gridLong.style.display='grid';
@@ -1253,6 +1294,10 @@ function setupTabs(){
         }
       }
       try{ if(window.Telemetry) Telemetry.event('FILTER_CHANGE', { tab: tab }); }catch(e){}
+      try{
+        const viewAll = document.getElementById('viewAllWork');
+        if(viewAll) viewAll.setAttribute('href', 'work.html?filter=' + (tab === 'short' ? 'short' : 'long'));
+      }catch(_){}
     };
     btn.onkeydown = (e)=>{
       if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
@@ -1495,7 +1540,21 @@ function renderWorkPage(){
       }
     }
   }catch(e){}
-  paint('all');
+  try{
+    const q = new URLSearchParams(location.search || '').get('filter') || 'all';
+    let initFilter = (q === 'long' || q === 'short') ? q : 'all';
+    if(initFilter === 'long' && !longVisible) initFilter = 'all';
+    if(initFilter === 'short' && !shortVisible) initFilter = 'all';
+    document.querySelectorAll('.wtab').forEach(b=>{
+      const on = (b.dataset.filter || 'all') === initFilter;
+      if(wtabVisible(b)){
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    });
+    paint(initFilter);
+  }catch(_){ paint('all'); }
   // Above-fold thumbs (work path): mirror the home render path (first 2
   // long-grid images eager + high fetch priority). renderGrid keeps every
   // other image lazy/async, so below-fold stays lazy.
@@ -1664,18 +1723,21 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
       ytOrigin = '&origin=' + encodeURIComponent(window.location.origin);
     }
   }catch(_){}
-  const playerHtml = `<iframe data-youtube-id="${yid}" src="https://www.youtube-nocookie.com/embed/${yid}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1${ytOrigin}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player — ${displayTitleAttr}" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000"></iframe>`;
+  const playerHtml = `<iframe data-youtube-id="${yid}" src="https://www.youtube-nocookie.com/embed/${yid}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1${ytOrigin}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player — ${displayTitleAttr}" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;border-radius:8px"></iframe>`;
 
   const stageStyle = isShort
-    ? 'position:relative;overflow:hidden;background:#000;border-radius:12px;box-shadow:none;width:min(92vw,420px);aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;'
-    : 'position:relative;overflow:hidden;background:#000;border-radius:12px;box-shadow:none;width:min(92vw,1200px);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;';
+    ? 'position:relative;overflow:hidden;background:#0a0a0b;border:1px solid rgba(255,255,255,.05);border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.55);width:min(92vw,420px);aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;'
+    : 'position:relative;overflow:hidden;background:#0a0a0b;border:1px solid rgba(255,255,255,.05);border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.55);width:min(92vw,1200px);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;';
 
   const modalHtml = `
-    <div class="video-viewer" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;background:#000;border-radius:16px;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:none;max-height:none;">
+    <div class="video-viewer" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border-radius:0;padding:12px;box-shadow:none;max-width:none;max-height:none;">
       <div style="display:flex;justify-content:flex-end;align-items:center;width:100%;flex-shrink:0;">
-        <button onclick="closeLightbox()" aria-label="Close video" style="width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fafafa;display:grid;place-items:center;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
+        <button onclick="closeLightbox()" aria-label="Close video" style="width:40px;height:40px;min-width:40px;min-height:40px;border-radius:50%;background:rgba(10,10,11,.6);backdrop-filter:none;border:1px solid rgba(255,255,255,.12);box-shadow:0 4px 12px rgba(0,0,0,.35);color:#fff;display:grid;place-items:center;font-size:15px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
-      <div class="video-stage" data-format="${isShort ? 'short' : 'long'}" style="${stageStyle};border-radius:12px;box-shadow:none;">
+      <div class="video-stage" data-format="${isShort ? 'short' : 'long'}" style="${stageStyle};">
+        <div class="video-spinner" style="position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:1;background:transparent;">
+          <div style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.65);animation:videoSpin .8s linear infinite;"></div>
+        </div>
         <div style="position:absolute;inset:0;">
           ${playerHtml}
         </div>
@@ -1777,7 +1839,7 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
     playerEl.onerror = showFallback;
     // VIDEO_READY semantics: iframe `load` observed (once). NOT playback
     // started, NOT video watched — player state belongs in the lab.
-    try{ if(window.Telemetry) playerEl.addEventListener('load', function(){ try{ Telemetry.event('VIDEO_READY', {}); }catch(e){} }, { once: true }); }catch(e){}
+    try{ var _hideSpin=function(){ try{ var _sp=box?box.querySelector('.video-spinner'):null; if(_sp) _sp.style.display='none'; }catch(e){} }; if(window.Telemetry) playerEl.addEventListener('load', function(){ _hideSpin(); try{ Telemetry.event('VIDEO_READY', {}); }catch(e){} }, { once: true }); else playerEl.addEventListener('load', function(){ _hideSpin(); }, { once: true }); }catch(e){}
     const msgHandler = (e)=>{
       try{
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
@@ -1928,6 +1990,157 @@ function bindCards(heroId){
   });
 }
 
+// SCROLL-SPY (one system) — sections [home,work,about,services], one activeSection, one updateActiveNav.
+// Observer: threshold array + rootMargin 35-45% band (-35% top / -55% bottom = 10% middle band).
+// Strongest-section wins + hysteresis (0.12) prevents boundary flicker; nav updates only on change.
+// Home maps to #home if present else #hero (checked first — #hero exists, no new id added). Hidden sections skipped.
+// Click+hash share this path: delegated smooth scroll (reduced-motion instant), passive hash sync (replaceState, no loops),
+// initial #hash lands after layout settles, footer back-to-top reuses same delegated handler (no separate logic).
+let activeSection = null;
+let _spyObserver = null;
+let _spyRatios = {};
+let _spySyncing = false;
+function updateActiveNav(id){
+  if(!id || id === activeSection) return;
+  activeSection = id;
+  try{
+    const toSpyId = (a)=>{
+      const h = (a.getAttribute('href') || '').trim();
+      if(!h) return null;
+      if(h === 'index.html' || h === './' || h === '/') return 'home';
+      if(h === 'work.html' || h.indexOf('work.html') === 0) return 'work';
+      const hi = h.indexOf('#');
+      if(hi !== -1){
+        const base = h.slice(0, hi);
+        const hash = h.slice(hi + 1);
+        if(base === '' || base === 'index.html' || base === './'){
+          if(hash === 'hero' || hash === 'home' || hash === '') return 'home';
+          if(hash === 'work') return 'work';
+          if(hash === 'about') return 'about';
+          if(hash === 'services') return 'services';
+          return null;
+        }
+        return null;
+      }
+      return null;
+    };
+    document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(a=>{
+      const sid = toSpyId(a);
+      if(sid && sid === id){
+        a.classList.add('active');
+        a.setAttribute('aria-current', 'page');
+      } else if(sid){
+        a.classList.remove('active');
+        a.removeAttribute('aria-current');
+      }
+    });
+    const hashFor = { home: (document.getElementById('home') ? 'home' : 'hero'), work: 'work', about: 'about', services: 'services' }[id];
+    if(hashFor && ('#' + hashFor) !== location.hash && !_spySyncing){
+      try{ history.replaceState(null, '', '#' + hashFor); }catch(_){}
+    }
+  }catch(_){}
+}
+function setupSectionTracking(){
+  try{
+    if(window.WORK_PAGE) return;
+    if(_spyObserver){ try{ _spyObserver.disconnect(); }catch(_){} _spyObserver = null; }
+    _spyRatios = {};
+    const homeEl = document.getElementById('home') || document.getElementById('hero');
+    const defs = [
+      ['home', homeEl],
+      ['work', document.getElementById('work')],
+      ['about', document.getElementById('about')],
+      ['services', document.getElementById('services')]
+    ].filter(entry=>{
+      const el = entry[1];
+      if(!el) return false;
+      try{
+        if(el.style && el.style.display === 'none') return false;
+        if(el.hasAttribute && el.hasAttribute('hidden')) return false;
+      }catch(_){}
+      return true;
+    });
+    if(!defs.length) return;
+    const applyInitialHash = ()=>{
+      try{
+        const h = (location.hash || '').replace('#', '');
+        const map = { home: 'home', hero: 'home', work: 'work', about: 'about', services: 'services' };
+        if(map[h]) updateActiveNav(map[h]);
+        else if(!activeSection) updateActiveNav('home');
+      }catch(_){}
+    };
+    _spyObserver = new IntersectionObserver((entries)=>{
+      try{
+        entries.forEach(en=>{
+          const sid = en.target && en.target.dataset ? en.target.dataset.spyId : null;
+          if(!sid) return;
+          _spyRatios[sid] = { ratio: en.intersectionRatio || 0, isIntersecting: !!en.isIntersecting };
+        });
+        let best = null, bestRatio = -1;
+        for(const k in _spyRatios){
+          const r = _spyRatios[k];
+          if(r.isIntersecting && r.ratio > bestRatio){ best = k; bestRatio = r.ratio; }
+        }
+        if(!best) return;
+        if(best === activeSection) return;
+        const cur = _spyRatios[activeSection];
+        if(cur && cur.isIntersecting && (bestRatio - cur.ratio) < 0.12) return;
+        _spySyncing = true;
+        try{ updateActiveNav(best); }finally{ _spySyncing = false; }
+      }catch(_){}
+    }, { threshold: [0, 0.25, 0.5, 0.75, 1], rootMargin: '-35% 0px -55% 0px' });
+    defs.forEach(entry=>{
+      try{ entry[1].dataset.spyId = entry[0]; _spyRatios[entry[0]] = { ratio: 0, isIntersecting: false }; _spyObserver.observe(entry[1]); }catch(_){}
+    });
+    if(!window._spyClickBound){
+      window._spyClickBound = true;
+      document.addEventListener('click', (e)=>{
+        try{
+          const a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+          if(!a) return;
+          const href = a.getAttribute('href') || '';
+          if(href.length < 2) return;
+          const target = document.getElementById(href.slice(1));
+          if(!target) return;
+          e.preventDefault();
+          const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          try{ target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); }catch(_){ try{ target.scrollIntoView(); }catch(_){} }
+          try{ history.replaceState(null, '', href); }catch(_){}
+          try{ document.getElementById('mobileMenu')?.classList.remove('open'); }catch(_){}
+        }catch(_){}
+      });
+      window.addEventListener('hashchange', ()=>{
+        if(_spySyncing) return;
+        try{
+          const h = (location.hash || '').replace('#', '');
+          if(!h) return;
+          const t = document.getElementById(h);
+          if(!t) return;
+          const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          try{ t.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); }catch(_){}
+        }catch(_){}
+      });
+      const landHash = ()=>{
+        try{
+          const h = (location.hash || '').replace('#', '');
+          if(!h){ applyInitialHash(); return; }
+          const t = document.getElementById(h);
+          if(!t){ applyInitialHash(); return; }
+          requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+            try{ t.scrollIntoView({ behavior: 'auto', block: 'start' }); }catch(_){}
+            applyInitialHash();
+          }); });
+        }catch(_){}
+      };
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(landHash, 120); }, { once: true });
+      else setTimeout(landHash, 120);
+      if(!(location.hash || '').replace('#', '')) applyInitialHash();
+    } else {
+      applyInitialHash();
+    }
+  }catch(_){}
+}
+
 document.getElementById('contactForm')?.addEventListener('submit', (e)=>{
   e.preventDefault();
   const form = e.target;
@@ -1975,7 +2188,8 @@ document.getElementById('contactForm')?.addEventListener('submit', (e)=>{
 if(CONTENT){
   if(window.WORK_PAGE && typeof renderWorkPage === 'function') renderWorkPage();
   else renderSite();
-} else document.addEventListener('DOMContentLoaded', ()=>{ renderSite(); });
+  try{ setupSectionTracking(); }catch(_){}
+} else document.addEventListener('DOMContentLoaded', ()=>{ renderSite(); try{ setupSectionTracking(); }catch(_){} });
 
 // TELEMETRY SCAFFOLD v1 (inert-by-default) — delete this IIFE + telemetry.js
 // <script> tag to remove. Inert proof: returns before Telemetry.init unless
@@ -2002,6 +2216,7 @@ if(CONTENT){
 })();
 
 window.handleThumbError = handleThumbError;
+window.thumbQualityCheck = thumbQualityCheck;
 window.closeLightbox = closeLightbox;
 
 // HOVER-POSITION FIX (2026-09-11) — reset-only, no highlight element, no coords.

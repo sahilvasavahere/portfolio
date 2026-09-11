@@ -86,7 +86,7 @@ const CONFIG = {
       "format": "long",
       "youtubeUrl": "https://www.youtube.com/watch?v=G2-1Am6vuus",
       "youtubeId": "G2-1Am6vuus",
-      "thumbnail": "https://images.unsplash.com/photo-1536243287037-7aa54338f5b9?w=600&q=80",
+      "thumbnail": "",
       "thumbnailAlt": "7 Things I Gave Up video thumbnail",
       "thumbnailFit": "cover",
       "meta": "Personal Development · Talking Head",
@@ -170,7 +170,7 @@ const CONFIG = {
       "format": "long",
       "youtubeUrl": "https://www.youtube.com/watch?v=GYgbarqC-PM",
       "youtubeId": "GYgbarqC-PM",
-      "thumbnail": "https://images.unsplash.com/photo-1536243287037-7aa54338f5b9?w=600&q=80",
+      "thumbnail": "",
       "thumbnailAlt": "Amazon KDP Explained video thumbnail",
       "thumbnailFit": "cover",
       "meta": "Educational · Talking Head",
@@ -239,6 +239,11 @@ const CONFIG = {
     },
     {
       "id": "proj_aec8d2",
+      "focusShort": {
+        "x": 0.5,
+        "y": 0.5,
+        "type": "text"
+      },
       "focus": {
         "x": 0.537,
         "y": 0.509,
@@ -267,6 +272,11 @@ const CONFIG = {
     },
     {
       "id": "proj_b176a5",
+      "focusShort": {
+        "x": 0.5,
+        "y": 0.5,
+        "type": "text"
+      },
       "focus": {
         "x": 0.562,
         "y": 0.497,
