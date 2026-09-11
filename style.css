@@ -13,10 +13,29 @@
   --page-padding:clamp(16px, 3vw, 32px);
   --section-gap:clamp(28px, 5vw, 56px);
   --grid-gap:clamp(12px, 1.8vw, 18px);
+  /* V3 type tokens (presentation roles only — values reference existing scale, no visual change yet) */
+  --text-display:clamp(30px, 5vw, 56px);
+  --text-h2:clamp(28px, 3.8vw, 36px);
+  --text-h3:16px;
+  --text-body:15px;
+  --text-small:14px;
+  --text-meta:12.5px;
+  --text-micro:11px;
+  --text-eyebrow:12px;
+  /* P1 spacing tokens — XS8/SM12/MD16/LG24/XL32/2XL48/3XL64 scale.
+     Page/section rhythm, hero stack, work groups, card internals, form, footer.
+     Container/section clamps untouched (architecture kept). */
+  --space-xs:8px;
+  --space-sm:12px;
+  --space-md:16px;
+  --space-lg:24px;
+  --space-xl:32px;
+  --space-2xl:48px;
+  --space-3xl:64px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 * {min-width:0}
-html{scroll-behavior:smooth;scroll-padding-top:72px;overflow-x:hidden}
+html{scroll-behavior:smooth;scroll-padding-top:72px;overflow-x:hidden;overflow-x:clip}
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
   *, *::before, *::after{transition:none !important;animation:none !important}
@@ -28,6 +47,7 @@ body{
   line-height:1.6;
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
+  overflow-x:clip;
   max-width:100vw;
 }
 a{color:inherit;text-decoration:none}
@@ -44,9 +64,10 @@ img{display:block;max-width:100%;height:auto}
 .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:.04em;flex-shrink:0}
 .logo span{color:var(--accent)}
 .nav-links{display:flex;align-items:center;gap:clamp(14px, 2vw, 28px);font-size:14px;flex-wrap:wrap}
-.nav-links a{color:var(--muted);transition:.2s;white-space:nowrap}
+.nav-links a{color:var(--muted);transition:color .2s ease;white-space:nowrap}
 .nav-links a:hover{color:var(--text)}
-.menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:6px;line-height:1}
+.nav-links a.active,.nav-links a[aria-current="page"],.mobile-menu a.active,.mobile-menu a[aria-current="page"]{color:var(--text);font-weight:600}
+.menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:10px;line-height:1;min-width:44px;min-height:44px}
 .mobile-menu{display:none;flex-direction:column;padding:12px var(--page-padding) 16px;gap:12px;border-top:1px solid var(--border);background:rgba(10,10,11,.98)}
 .mobile-menu.open{display:flex}
 .mobile-menu a{color:var(--muted);font-size:15px;padding:6px 0}
@@ -76,12 +97,12 @@ img{display:block;max-width:100%;height:auto}
 .hero-cta .btn{flex:0 1 auto}
 .stats{display:flex;gap:clamp(16px, 3vw, 32px);border-top:1px solid var(--border);padding-top:18px;flex-wrap:wrap}
 .stats strong{display:block;font-size:clamp(18px, 2.5vw, 22px);font-family:'Space Grotesk',sans-serif}
-.stats span{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.stats span{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:none}
 .hero-card{position:relative;border-radius:20px;overflow:hidden;background:var(--card);border:1px solid var(--border);aspect-ratio:16/10;cursor:pointer;transition:border-color .2s;min-width:0}
 .hero-card:hover{border-color:#2e2e32}
 .hero-card img{width:100%;height:100%;object-fit:cover;display:block}
-.play-btn{position:absolute;inset:0;margin:auto;width:clamp(48px, 8vw, 64px);height:clamp(48px, 8vw, 64px);border-radius:50%;background:var(--accent);border:none;font-size:clamp(16px, 2.5vw, 22px);cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 30px rgba(0,0,0,.4);transition:transform .2s, background .2s;flex-shrink:0}
-.play-btn:hover{transform:scale(1.06);background:var(--accent-2)}
+.play-btn{position:absolute;inset:0;margin:auto;width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;font-size:15px;cursor:pointer;display:grid;place-items:center;transition:transform .15s ease;flex-shrink:0}
+.play-btn:hover{transform:scale(1.06)}
 .hero-card-label{position:absolute;bottom:12px;left:12px;right:auto;display:inline-flex;align-items:center;width:fit-content;max-width:calc(100% - 24px);background:rgba(0,0,0,.72);backdrop-filter:blur(6px);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,0.08)}
 .hero-card-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;min-width:0}
 
@@ -118,6 +139,16 @@ img{display:block;max-width:100%;height:auto}
 }
 .grid-long .card-media{aspect-ratio:16/9}
 .grid-short .card-media{aspect-ratio:9/16}
+/* WORK PAGE — format sections: each format keeps its native ratio */
+.work-subhead{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--muted);margin:30px 0 14px}
+.work-subhead:first-of-type{margin-top:22px}
+#workGridShort{grid-template-columns:repeat(2, minmax(0,1fr))}
+@media(min-width:640px){
+  #workGridShort{grid-template-columns:repeat(3, minmax(0,1fr))}
+}
+@media(min-width:1024px){
+  #workGridShort{grid-template-columns:repeat(3, minmax(0,1fr));gap:20px}
+}
 .grid-short .card-body{padding:12px;gap:6px}
 .grid-short .card-body h3{font-size:13px;line-height:1.3;min-height:unset;-webkit-line-clamp:2}
 .grid-short .card-body p{font-size:11px}
@@ -129,26 +160,28 @@ img{display:block;max-width:100%;height:auto}
   .preview-iframe{transition:none}
 }
 /* CARD — lean, premium, strict thumbnail */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 220ms cubic-bezier(0.16,1,0.3,1), border-color 220ms, box-shadow 220ms;display:flex;flex-direction:column;min-width:0;width:100%;will-change:transform}
-.card:hover{transform:translateY(-4px);border-color:#2e2e32;box-shadow:0 16px 40px rgba(0,0,0,.32)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 220ms cubic-bezier(0.16,1,0.3,1), border-color 220ms, box-shadow 220ms;display:flex;flex-direction:column;min-width:0;width:100%}
+.card:hover{transform:translateY(-4px);border-color:#2e2e32;box-shadow:0 16px 40px rgba(0,0,0,.32);will-change:transform}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .card-media img{width:100%;height:100%;object-fit:cover;aspect-ratio:16/9;transition:transform 380ms cubic-bezier(0.16,1,0.3,1), opacity 200ms;display:block;background:#0f0f10}
 .card:hover .card-media img{transform:scale(1.03)}
 .card:active{transform:translateY(-1px)}
-/* CATEGORY BADGE — single system */
-.badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;height:22px;padding:0 10px;background:rgba(0,0,0,.68);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;line-height:1;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.08);color:#fff}
-/* PLAY BUTTON — premium minimal, perfectly centered */
-.play-badge{position:absolute;inset:0;margin:auto;width:48px;height:48px;background:rgba(255,255,255,.92);color:#000;border-radius:50%;display:grid;place-items:center;font-size:15px;opacity:0;transform:scale(.86);transition:opacity 200ms, transform 220ms cubic-bezier(0.16,1,0.3,1);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.9)}
-.card:hover .play-badge{transform:scale(1)}
+/* CATEGORY BADGE — single system (P2.4 natural: stored Title Case verbatim, never capitalize free text — acronym-safe) */
+.badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;height:22px;padding:0 10px;background:rgba(0,0,0,.68);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;font-size:10px;letter-spacing:.09em;text-transform:none;font-weight:700;line-height:1;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.08);color:#fff}
+/* P0 badge redundancy: Short badge duplicates SHORT-FORM section/tabs — hide in short grids only; keep Talking Head (category adds scan value) */
+.grid-short .badge,#workGridShort .badge{display:none}
+/* PLAY BUTTON — P0 minimal: 44px, centered, subtle hover scale only, no glow */
+.play-badge{position:absolute;inset:0;margin:auto;width:44px;height:44px;background:rgba(255,255,255,.92);color:#000;border-radius:50%;display:grid;place-items:center;font-size:14px;opacity:0;transform:scale(1);transition:transform .15s ease, opacity .15s ease;pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.9)}
+.card:hover .play-badge{transform:scale(1.06)}
 .card[data-youtube-id] .play-badge,.card[data-youtube-url] .play-badge{opacity:1}
-.card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{transform:scale(1.08);background:#fff}
+.card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{transform:scale(1.06)}
 /* CARD BODY — compact, intentional, unified */
 .card-body{padding:16px;flex:0 0 auto;display:flex;flex-direction:column;gap:8px;min-width:0}
 .card-body h3{font-size:14.5px;font-weight:600;line-height:1.3;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:unset;overflow-wrap:break-word;letter-spacing:-.01em}
 .card-body p{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;letter-spacing:.01em;margin:0}
 
 /* ABOUT */
-.about-grid{display:grid;grid-template-columns:minmax(300px, 420px) 1fr;gap:clamp(24px, 4vw, 48px);align-items:center}
+.about-grid{display:grid;grid-template-columns:minmax(0, 420px) 1fr;gap:clamp(24px, 4vw, 48px);align-items:center}
 .about-img{border-radius:20px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/5;background:#000;min-width:0}
 .about-img img{width:100%;height:100%;object-fit:cover;display:block}
 .about-text h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px, 3.5vw, 36px);line-height:1.05;letter-spacing:-.03em;margin:12px 0 14px;overflow-wrap:break-word}
@@ -162,7 +195,10 @@ img{display:block;max-width:100%;height:auto}
 .services-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr));gap:var(--grid-gap);margin-top:20px}
 .service-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(18px, 2.5vw, 22px);display:flex;flex-direction:column;transition:border-color .2s, transform .2s;min-width:0}
 .service-card:hover{border-color:#2e2e32;transform:translateY(-2px)}
-.service-card .icon{font-size:26px;margin-bottom:10px}
+.service-card .icon{font-size:26px;margin-bottom:10px;line-height:1;color:var(--text)}
+.service-card .icon svg{width:24px;height:24px;display:block;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.contact-links a{display:inline-flex;align-items:center;gap:8px}
+.contact-links a svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0}
 .service-card h3{font-size:16px;margin-bottom:6px;overflow-wrap:break-word}
 .service-card p{color:var(--muted);font-size:14px;margin-bottom:12px;flex:1;overflow-wrap:break-word}
 .price{font-size:13px;font-weight:600;color:var(--accent)}
@@ -192,7 +228,7 @@ img{display:block;max-width:100%;height:auto}
 .lightbox-content.short{aspect-ratio:9/16;max-width:min(380px, calc(100vw - 2*var(--page-padding)));width:min(380px, 90vw);max-height:85vh}
 .lightbox-content.short iframe,.lightbox-content.short img{object-fit:cover}
 .lightbox-content iframe,.lightbox-content img{width:100%;height:100%;border:none;object-fit:contain;display:block}
-.lightbox-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;z-index:2;display:grid;place-items:center;flex-shrink:0;transition:background 150ms, transform 150ms}
+.lightbox-close{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;z-index:2;display:grid;place-items:center;flex-shrink:0;transition:background 150ms, transform 150ms}
 .lightbox-close:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
 .lightbox-close:active{transform:scale(0.95)}
 
@@ -210,7 +246,9 @@ img{display:block;max-width:100%;height:auto}
   .hero h1{font-size:clamp(30px, 8vw, 38px)}
   .stats{gap:20px}
   .about-grid{grid-template-columns:1fr;gap:24px}
-  .about-img{aspect-ratio:16/10;max-height:380px}
+  .about-grid>*{min-width:0;max-width:none;grid-column:auto}
+  .about-img{aspect-ratio:16/10;max-height:380px;width:100%;max-width:none;min-width:0}
+  .about-text{width:100%;max-width:none;min-width:0}
   .contact-grid{grid-template-columns:1fr}
   .services-grid{grid-template-columns:1fr}
 }
@@ -229,7 +267,7 @@ img{display:block;max-width:100%;height:auto}
   .card-body h3{font-size:14px;min-height:auto}
   .contact-grid h2{font-size:28px}
   .lightbox{padding:12px}
-  .lightbox-close{top:8px;right:8px;width:36px;height:36px;font-size:16px}
+  .lightbox-close{top:8px;right:8px;width:44px;height:44px;font-size:16px}
   .tab-btn{padding:8px 14px;font-size:12px}
   .section-head{flex-direction:column;align-items:flex-start}
 }
@@ -241,4 +279,903 @@ img{display:block;max-width:100%;height:auto}
 @media (prefers-reduced-motion: no-preference){
   .card{animation:fadeIn .4s ease-out}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+}
+
+/* P1 visual-refinement (Work page + header) — rhythm, cards, filters.
+   Overrides only; no data-model, copy, ratio, or layout re-architecture. */
+/* 1+2. Work header composition + vertical rhythm (section >> card spacing) */
+.work-page{padding-top:clamp(40px, 5vw, 72px)}
+.work-page .section-head{margin-bottom:clamp(32px, 4vw, 52px);gap:12px 24px}
+.work-page .section-head-left{gap:4px}
+#workCount{margin-top:2px}
+#workSectionShort{margin-top:clamp(40px, 4.5vw, 56px)}
+.work-subhead{margin:0 0 20px}
+.work-subhead:first-of-type{margin-top:0}
+.work-cta{margin-top:clamp(48px, 6vw, 72px);text-align:center}
+/* 3. Cards: thumbnail-dominant, subtle hover, premium play (no glow) */
+.card-body{padding:12px 14px;gap:4px}
+.card:hover{transform:translateY(-3px)}
+.card:hover .card-media img{transform:scale(1.025)}
+.play-badge{width:44px;height:44px;font-size:14px}
+.card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{transform:scale(1.06)}
+.tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* V3 focus language — same yellow ring everywhere, no layout change */
+.nav-links a:focus-visible,.mobile-menu a:focus-visible,.btn:focus-visible,.menu-btn:focus-visible,.play-btn:focus-visible,.contact-form input:focus-visible,.contact-form select:focus-visible,.contact-form textarea:focus-visible,.footer a:focus-visible,.lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.contact-form label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--muted);margin-bottom:-6px}
+.form-error{font-size:12.5px;color:#f87171;min-height:16px;margin:0}
+.contact-form input[aria-invalid="true"],.contact-form select[aria-invalid="true"],.contact-form textarea[aria-invalid="true"]{border-color:#f87171}
+/* 4+5. Shorts: native 9:16 kept; tighter metadata so page doesn't bloat */
+.grid-short .card-body{padding:10px 12px;gap:3px}
+/* 4. Filters usable on 390px: single-row scrollable pills, no page overflow */
+@media(max-width:640px){
+  .work-tabs{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .work-tabs::-webkit-scrollbar{display:none}
+  .work-page .section-head{flex-direction:column;align-items:stretch}
+  .work-page .work-tabs{align-self:flex-start;max-width:100%}
+}
+@media(max-width:480px){
+  .play-badge{width:44px;height:44px;font-size:14px}
+}
+
+/* P2.1–P2.3 visual-language pass — header lock, intro/filter hierarchy, casing.
+   Presentation layer only; no copy, data-model, ratio, or player changes. */
+/* P2.1 header lock: Contact button keeps black text on yellow (beats .nav-links a) */
+.nav-links a.btn{color:#000}
+.nav-links a.btn:hover{color:#000}
+/* P2.2 intro/filter hierarchy: title/sub/count left, filters vertically centered right */
+.work-page .section-head{align-items:center}
+/* P2.2 stacked mobile keeps left-aligned stretch (overrides center above at ≤640px) */
+@media(max-width:640px){
+  .work-page .section-head{align-items:stretch}
+}
+/* P2.4 case/text presentation (CSS only, stored values untouched):
+   All presentation defaults natural (none) — stored Title Case renders verbatim;
+   never capitalize free text (acronym-safe: AI/YouTube/KDP/DaVinci);
+   explicit Uppercase still available via JS resolveTextCase + editor dropdowns.
+   Badges (Talking Head/Short), subheads (Long-form/Short-form), eyebrows (About Me),
+   stats, nav/buttons/filters/footer/metadata stay natural */
+.eyebrow{text-transform:none}
+.work-subhead{text-transform:none}
+/* P2.4 explicit natural guard — casing only, no layout/typography changes */
+.nav-links a,.mobile-menu a,.btn,.tab-btn,.footer,.footer a,.hero-card-label,.card-body p{text-transform:none}
+/* P2.2 tappable pills: 36px target without visual bloat; focus ring kept above */
+.tab-btn{min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+
+/* P2.4 Typography System — one deliberate hierarchy (presentation only).
+   Hero H1 remains strongest. All section H2 share one definition.
+   Eyebrow defined once (small/tracked/secondary). Stored values untouched;
+   casing stays natural via .eyebrow/.work-subhead none + JS resolver. */
+.hero h1{font-weight:700}
+.section-head h2,
+.about-text h2,
+#servicesTitle,
+.contact-grid h2,
+.work-page .section-head h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(28px,3.8vw,36px);line-height:1;letter-spacing:-.04em;color:var(--text);overflow-wrap:break-word}
+.section-head h2{margin:0}
+.about-text h2{margin:0 0 14px}
+#servicesTitle{margin:0 0 6px}
+.contact-grid h2{margin:0 0 12px}
+.eyebrow{font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:700;letter-spacing:.14em;line-height:1.4;color:var(--muted);margin:0 0 10px;text-transform:none}
+#heroTagline{margin:0 0 10px}
+.about-text .eyebrow{margin:0 0 10px}
+@media(max-width:480px){
+  .section-head h2,.about-text h2,#servicesTitle,.contact-grid h2{font-size:28px;line-height:1.05}
+}
+
+/* P1 TYPOGRAPHY + SPACING SYSTEM (CSS-first, tokens, hierarchy-neutral).
+   Scope only: spacing scale, type lock, grid consistency, form normalization.
+   Locks kept: native ratios 16/9 + 9/16, sticky Home-first nav, casing natural,
+   quality API + hero offsets, badge/play/filter treatments, hero H1 size,
+   color palette, copy/IDs/URLs/thumbnails/player logic — all untouched.
+   No animations, gradients, glow, shadows, sections, SEO, or extra a11y. */
+
+/* 1. PAGE/SECTION RHYTHM — same values expressed via tokens (clamps kept) */
+.nav-inner{gap:var(--space-md)}
+.mobile-menu{padding:var(--space-sm) var(--page-padding) var(--space-md);gap:var(--space-sm)}
+.btn{padding:var(--space-sm) 22px}
+.btn-sm{padding:var(--space-xs) var(--space-md)}
+.hero{gap:clamp(var(--space-lg), 4vw, var(--space-2xl))}
+.hero h1{margin:var(--space-sm) 0}
+.hero-desc{font-size:clamp(14px, 1.6vw, 15px);margin-bottom:var(--space-md)}
+.hero-cta{gap:var(--space-sm);margin-bottom:var(--space-lg)}
+.stats{gap:clamp(var(--space-md), 3vw, var(--space-xl));padding-top:var(--space-md)}
+.section-head{gap:var(--space-md) var(--space-lg);margin-bottom:var(--space-lg)}
+.about-grid{gap:clamp(var(--space-lg), 4vw, var(--space-2xl))}
+.about-text p{margin-bottom:var(--space-sm)}
+.checklist{gap:var(--space-xs);margin:var(--space-sm) 0}
+.tools{gap:var(--space-xs);margin-top:var(--space-md)}
+.tools span{padding:6px var(--space-sm)}
+.services-grid{margin-top:var(--space-md)}
+.service-card p{margin-bottom:var(--space-sm)}
+.contact-grid{gap:clamp(var(--space-lg), 4vw, var(--space-2xl))}
+.contact-links{margin-top:var(--space-md);gap:var(--space-xs)}
+.contact-form{gap:var(--space-sm)}
+.footer{padding:var(--space-md) 0}
+.footer-inner{gap:var(--space-sm)}
+
+/* 1b. WORK intro→filters→groups→CTA rhythm (tokens, hierarchy: section >> label >> cards) */
+.work-page .section-head{margin-bottom:clamp(var(--space-xl), 4vw, 52px)}
+.work-subhead{font-size:var(--text-eyebrow);margin:0 0 var(--space-lg)}
+.work-cta{margin-top:clamp(var(--space-2xl), 6vw, 72px)}
+
+/* 2. TYPE HIERARCHY LOCK — Display H1 dominant untouched; one canonical H2 max 36px;
+      H3 14-16/600; body 14-15; meta 12-12.5; micro 10-11; eyebrow 12/700/.14em.
+      No mass-bolding, no size inflation. Hero H1 font-size never overridden here. */
+.section-head h2,
+.about-text h2,
+#servicesTitle,
+.contact-grid h2,
+.work-page .section-head h2{font-size:var(--text-h2)}
+.about-text h2{margin:0 0 var(--space-sm)}
+.contact-grid h2{margin:0 0 var(--space-sm)}
+.eyebrow,
+#heroTagline,
+.about-text .eyebrow{margin:0 0 var(--space-xs)}
+.card-body p{font-size:var(--text-meta)}
+.grid-short .card-body p{font-size:var(--text-micro)}
+.grid-short .card-body h3{font-size:14px}
+.service-card h3{font-weight:600}
+
+/* 3. GRID CONSISTENCY — Shorts 3 cols Home + Work (fix home 4-col outlier);
+      Long 2 cols; mobile single column; filters inline desktop → scroll mobile (locked, untouched). */
+.grid{gap:var(--space-md)}
+.grid-long{grid-template-columns:repeat(1, minmax(0,1fr))}
+.grid-short{grid-template-columns:repeat(1, minmax(0,1fr));gap:var(--space-sm)}
+#workGridShort{grid-template-columns:repeat(1, minmax(0,1fr))}
+@media(min-width:640px){
+  .grid-long{grid-template-columns:repeat(2, minmax(0,1fr))}
+  .grid-short{grid-template-columns:repeat(3, minmax(0,1fr))}
+  #workGridShort{grid-template-columns:repeat(3, minmax(0,1fr))}
+}
+@media(min-width:1024px){
+  .grid-long{grid-template-columns:repeat(2, minmax(0,1fr));gap:var(--space-lg)}
+  .grid-short{grid-template-columns:repeat(3, minmax(0,1fr));gap:var(--space-md)}
+  #workGridShort{grid-template-columns:repeat(3, minmax(0,1fr));gap:var(--space-md)}
+}
+@media(min-width:1440px){
+  .grid-long{gap:var(--space-xl)}
+}
+
+/* 4. COMPONENT NORMALIZATION — one form family (44px, same border/radius/focus, consistent arrow);
+      card internals consistent (long vs short distinction kept tight); badge/play/filter untouched. */
+.contact-form input,
+.contact-form select,
+.contact-form textarea{min-height:44px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:var(--space-sm) 14px;font-family:inherit;font-size:14px}
+.contact-form select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a1a1aa' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px;padding-right:36px;cursor:pointer}
+.contact-form select::-ms-expand{display:none}
+.contact-form textarea{resize:vertical}
+.contact-form .btn{min-height:44px}
+.card-body{padding:var(--space-sm) 14px;gap:4px}
+.grid-short .card-body{padding:10px var(--space-sm);gap:3px}
+
+/* P1 responsive tokens — same values via scale (no layout re-architecture) */
+@media(max-width:1024px){
+  .about-grid{gap:var(--space-xl)}
+}
+@media(max-width:768px){
+  .about-grid{gap:var(--space-lg)}
+}
+@media(max-width:480px){
+  .stats{gap:var(--space-sm)}
+  .lightbox{padding:var(--space-sm)}
+}
+
+/* P2.5-composition B1 spacing tokens — aliases to P1 --space-* scale.
+   Task shorthand (--sp-xs 8 … --3xl 64) expanded to --sp-* namespace to avoid
+   collisions with bare --sm/--md. Tokens only, no selectors, no visual change. */
+:root{
+  --sp-xs:8px;
+  --sp-sm:12px;
+  --sp-md:16px;
+  --sp-lg:24px;
+  --sp-xl:32px;
+  --sp-2xl:48px;
+  --sp-3xl:64px;
+}
+
+/* P2.5-composition B2 global rhythm — Header64 locked via existing .nav-inner
+   (untouched). Hero top 32-40. Work total gap 48 (hero-bottom 24 [B3] + #work
+   top 24 = 48, the single value inside both B2 Work 48-56 and B3 stats→next
+   40-48). Uses tokens + existing --section-gap architecture (no global
+   .section change). No design.js file present in repo (grep 2026-09-11: only
+   CONTENT.design.textCase in script.js) — nothing to preserve/port.
+   About 56-64 / Services 56-64 / Contact 56-64 / Footer 48 deferred to B7-B14
+   per stop-before-About/Services/Contact + contact-balance-defer-to-B9. */
+.hero{padding-top:clamp(32px, 4vw, 40px)}
+#work{padding-top:var(--sp-lg)}
+.work-page{padding-top:clamp(var(--sp-2xl), 5vw, 56px)}
+
+/* P2.5-composition B3 hero stack — H1 size clamp(30px,5vw,56px) ls -.04em
+   untouched (no font-size/letter-spacing here). CTA destinations untouched
+   (CSS only). Offsets preserved (config.js offset eyebrow 16/title -4: script.js
+   applies relative top; this block uses margins/padding only, never top/transform). */
+.hero h1{margin-top:12px;margin-bottom:14px}
+.hero-desc{margin-bottom:18px}
+.hero-cta{margin-bottom:clamp(var(--sp-lg), 3vw, var(--sp-xl))}
+.hero{padding-bottom:var(--sp-lg)}
+
+/* P2.5-composition B4 work header — compact title→sub 4-6 → filters 16-20 →
+   cards 24-28. Scoped to #work/.work-page only (custom-section .section-head
+   untouched). No filter redesign: .tab-btn pills, 36px min-height, mobile
+   scroll (.work-tabs nowrap + overflow-x) untouched — no box changes here. */
+#work .section-head-left{gap:6px}
+.work-page .section-head-left{gap:4px}
+#work .section-head{gap:16px 24px}
+.work-page .section-head{gap:16px 24px}
+#work .section-head{margin-bottom:var(--sp-lg)}
+.work-page .section-head{margin-bottom:clamp(var(--sp-lg), 3vw, 28px)}
+
+/* P2.5-composition B5 card density — thumbnail hero (16/9 long + 9/16 short
+   ratios untouched), badge quiet secondary (untouched), play 44px centered
+   white no-glow hover 1.06 only (untouched — no .badge/.play-badge rules here).
+   Only card-body padding/gap + title/meta line-height/tracking. Title stays
+   strongest (14.5px/600 kept), meta lowest (size/color kept). */
+.card-body{padding:var(--sp-sm) 14px;gap:4px}
+.card-body h3{line-height:1.35;letter-spacing:-.01em}
+.card-body p{line-height:1.4;letter-spacing:.01em}
+.grid-short .card-body{padding:10px var(--sp-sm);gap:3px}
+
+/* P2.5-composition B6 work CTA — compress isolated whitespace around View All
+   Work, center naturally, wording/destination work.html untouched (CSS only, no
+   HTML). Home CTA uses inline margin-top:28px so !important is required to beat
+   inline under append-only style.css constraint (scoped to #work wrapper only).
+   Container-to-content: cards→CTA 24 + existing section-bottom kept.
+   Work-page .work-cta (Let's Talk → #contact, contact funnel) deliberately
+   untouched — keep current funnel + stop-before-Contact. */
+#work > div:last-child{margin-top:var(--sp-lg) !important;text-align:center}
+
+/* P2.6–P2.11 Work-page visual calming — reduction, CSS-only.
+   Scope: Work page rhythm/labels/badges/play/card-footer/filters/tracking/mobile.
+   Locks kept: native ratios 16/9 + 9/16, sticky Home-first nav, honest empty states,
+   quality API + hero offsets, P1 tokens, real data 4 long + 3 short, copy/titles/
+   badges text/metadata/IDs/URLs/thumbnails/player/filter logic/palette untouched.
+   No new sections/effects/animations/SEO. No HTML/JS changes. */
+
+/* P2.6 RHYTHM — section gaps clearly larger than card gaps.
+   Header→LONG label kept 24-28 (existing .work-page .section-head margin-bottom);
+   label→grid 16 (was 24); SHORT section 48-64 (was 40-56); CTA 40-48 (was 48-72);
+   footer pad-bottom 48-64 (was 28-56 via --section-gap). Tokens via --sp-*. */
+.work-page .work-subhead{margin:0 0 16px}
+#workSectionShort{margin-top:clamp(48px, 5vw, 64px)}
+.work-page .work-cta{margin-top:clamp(40px, 5vw, 48px)}
+.work-page{padding-bottom:clamp(48px, 5vw, 64px)}
+/* Long-form grid gaps 16-20 (was 24 @1024, 32 @1440). Base 16 kept. */
+@media(min-width:1024px){
+  .grid-long,#workGridLong{gap:20px}
+  #workGridShort{gap:16px}
+}
+@media(min-width:1440px){
+  .grid-long,#workGridLong{gap:20px}
+}
+
+/* P2.7 LABELS — quiet editorial markers. Title Case via existing none (stored
+   verbatim, acronym-safe). 13px/600/.05em/muted. No boxed treatment. */
+.work-page .work-subhead{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--muted);background:none;border:none;padding:0;text-transform:none}
+
+/* P2.7 BADGES — smaller + quieter, all kept present. 21px height (was 22),
+   9px padding (was 10), 10px/600 (was 10/700), tracking .03em (was .09em),
+   opacity .92 (was 1), dark translucent bg kept, never yellow/glow/white bg. */
+.grid-short .badge,#workGridShort .badge{display:inline-flex}
+.badge{height:21px;padding:0 9px;font-size:10px;font-weight:600;letter-spacing:.03em;opacity:.92;background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.08);box-shadow:none;text-shadow:none;color:#fff}
+/* P2.9 PURPLE Quick disclaimer: baked into YouTube thumbnail image
+   (img.youtube.com/vi/V2126FNQ5zo/hqdefault.jpg, top-right of card 2) — no DOM
+   node (grep + bodyText scan 0 hits). DO NOT TOUCH per spec. No rule here. */
+
+/* P2.7 PLAY — 44px centered white kept; opacity .92 (was 1) → 1 hover;
+   scale 1.05 hover (was 1.06). No shadow/glow additions. */
+.play-badge{box-shadow:none;width:44px;height:44px}
+.card[data-youtube-id] .play-badge,.card[data-youtube-url] .play-badge{opacity:.92}
+.card:hover .play-badge{transform:scale(1.05)}
+.card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{opacity:1;transform:scale(1.05)}
+
+/* P2.9 CARD FOOTER — title 14.5px/600 strongest kept; meta 12px (was 12.5px)
+   muted kept; padding 12px 14px + gap 4px (≈ title margin-bottom 4px) kept;
+   meta line-height 1.4 kept. No height growth. Shorts internals untouched. */
+.card-body{padding:12px 14px;gap:4px}
+.card-body p{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* P2.10 FILTERS — pill system + active white/black kept; container contrast
+   slightly reduced (bg .9 → .6, border var(--border) → white .06) so it reads
+   as control not heading. Mobile horizontal-scroll kept (existing ≤640px). */
+.work-tabs{background:rgba(24,24,27,.6);border-color:rgba(255,255,255,.06)}
+.tab-btn.active{background:var(--text);color:#000}
+
+/* P2.8 TRACKING CLEANUP — remove only excessive tracking, nothing else.
+   Nav links already normal (no letter-spacing). Body/meta .01em kept normal.
+   Logo .04em / stats .06em / form-label .04em kept (within .02-.06, not
+   excessive). Eyebrow .14em → .05em. Work-subhead/badge fixed above. */
+.eyebrow{letter-spacing:.05em}
+
+/* P2.11 MOBILE 390/360 — single columns kept (base 1-col); portrait Shorts
+   capped via width (ratio 9/16 untouched, no crop, object-fit untouched);
+   filter scroll + sticky header kept; CTA/footer via rhythm clamps above. */
+@media(max-width:640px){
+  .work-tabs{flex-wrap:nowrap;overflow-x:auto;max-width:100%}
+}
+
+/* ============================================================
+   V2 VISUAL IMPROVEMENT — composition refinement, not redesign.
+   Batch order V2.1 → V2.7. Overrides only; architecture locked:
+   64px header, hero H1 size clamp, 16:9/9:16, 44px play, filter
+   behavior/scroll, YouTube IDs/playback/lightbox, hero offsets,
+   config arch, section structure, 4 services, dark/yellow kept.
+   YELLOW = ATTENTION/ACTION only (L1 fill / L2+L3 ghost).
+   ============================================================ */
+
+/* V2.1 HIERARCHY + YELLOW SYSTEM */
+/* L3 header Contact = ghost/neutral. Beats .nav-links a.btn{#000}
+   (P2.1 lock) with higher specificity; wording untouched. */
+.nav-links a.btn-ghost,
+.nav-links a.btn-header-contact,
+.nav-links a.btn.btn-ghost,
+.nav-links a.btn.btn-header-contact{color:var(--text);background:transparent;border:1px solid var(--border)}
+.nav-links a.btn-ghost:hover,
+.nav-links a.btn-header-contact:hover,
+.nav-links a.btn.btn-ghost:hover{background:var(--card);color:var(--text);transform:none}
+/* 44px touch target kept (btn-sm visual padding kept, target via min-height) */
+.btn-header-contact{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.btn{min-height:44px;letter-spacing:0}
+.tab-btn{min-height:36px;letter-spacing:0}
+/* L1 stays yellow fill only: hero My Work + Send Message. No new yellow. */
+.hero-cta .btn:first-child{background:var(--accent);color:#000}
+.contact-form button[type="submit"].btn{background:var(--accent);color:#000;width:100%}
+/* L2 ghost: Let's Talk + View All Work + work-page CTA. No size change. */
+.hero-cta .btn-ghost,
+#work > div:last-child .btn-ghost,
+.work-page .work-cta .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.hero-cta .btn-ghost:hover,
+#work > div:last-child .btn-ghost:hover,
+.work-page .work-cta .btn-ghost:hover{background:var(--card);color:var(--text)}
+
+/* V2.1 HERO — structure kept; tight H1, weight contrast, H1→para 14px */
+.hero h1{line-height:.95;letter-spacing:-.035em;font-weight:700;margin-top:12px;margin-bottom:14px}
+.hero-desc{letter-spacing:0;margin-bottom:18px}
+/* V2.1 HERO CTA — separation slightly up (12→16), no size increase */
+.hero-cta{gap:16px;margin-bottom:24px}
+
+/* V2.1 STATS — evidence, not chips: 22/11, stack gap 5, group 24-32, no yellow/card */
+.stats{gap:24px 32px}
+.stats > div{display:flex;flex-direction:column;gap:5px}
+.stats strong{font-size:22px;line-height:1.1;letter-spacing:-.01em;color:var(--text)}
+.stats span{font-size:11px;letter-spacing:.04em;color:var(--muted)}
+
+/* V2.6 TRACKING (spec 26) — H1/H2 -.035, H3 -.01, Body 0, Meta .01 kept,
+   Eyebrow/Section .08, Badge .02, Buttons 0 */
+.section-head h2,.about-text h2,#servicesTitle,.contact-grid h2,
+.work-page .section-head h2{letter-spacing:-.035em}
+.card-body h3,.service-card h3{letter-spacing:-.01em}
+.hero-desc,.about-text p,.service-card p,.contact-grid p{letter-spacing:0}
+.eyebrow,#heroTagline,.about-text .eyebrow{letter-spacing:.08em}
+.work-page .work-subhead,.work-subhead{letter-spacing:.08em}
+.badge{letter-spacing:.02em}
+.btn,.tab-btn{letter-spacing:0}
+
+/* V2.2 RHYTHM (spec 27-30) — Hero 12/14/18/24, sections 40-56, footer 40-48 */
+#heroTagline{margin:0 0 12px}
+.hero h1{margin-top:12px;margin-bottom:14px}
+.hero-desc{margin-bottom:18px}
+.hero-cta{margin-bottom:24px}
+/* Hero→Work ≈40 (20+20, was 24+24=48) */
+.hero{padding-bottom:20px}
+#work{padding-top:20px;padding-bottom:24px}
+#work .section-head{margin-bottom:24px}
+/* Work→About 48-56 (24+24=48) */
+#about{padding-top:24px;padding-bottom:24px}
+/* About internal 12/16/14 */
+.about-text .eyebrow{margin:0 0 12px}
+.about-text h2{margin:0 0 16px}
+.about-text p{margin-bottom:14px}
+.checklist{margin:14px 0}
+.tools{margin-top:14px}
+/* About→Services 48-56 (24+24=48) */
+#services{padding-top:24px;padding-bottom:24px}
+/* Services internal 16-20 (title→grid = 20) */
+#servicesTitle{margin:0 0 8px}
+.services-grid{margin-top:12px}
+/* Services→Contact 48-56 (24+24=48) */
+#contact{padding-top:24px;padding-bottom:24px}
+/* Contact internal 16-20 */
+.contact-grid h2{margin:0 0 16px}
+.contact-links{margin-top:16px}
+/* Contact→Footer 40-48 (24 bottom + 16 footer = 40) */
+.footer{padding:16px 0}
+
+/* V2.3 CARDS */
+/* My Work header: heading dominant (36px kept), pills 36px kept, filter low-contrast kept */
+#work .section-head h2{font-size:clamp(28px,3.8vw,36px)}
+/* Badges: Talking Head quiet 10px/500/.02em/opacity .85/quiet border */
+.badge{font-size:10px;font-weight:500;letter-spacing:.02em;opacity:.85;background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.08);box-shadow:none;text-shadow:none;color:#fff;height:21px;padding:0 9px}
+/* Hide Short badge — section/tabs already say SHORT-FORM (overrides P2.6 re-show) */
+.grid-short .badge,#workGridShort .badge{display:none !important}
+/* PLAY: untouched — 44px white centered (no rules here by intent) */
+/* Thumbnails: kill white letterbox, consistent cover, don't crop faces */
+.card-media{background:#000}
+.card-media img{object-fit:cover;object-position:center;width:100%;height:100%;aspect-ratio:auto;background:#000}
+/* Card meta honest single-line (titles/metas fixed in config.js, never invented) */
+.card-body p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* View All Work = ghost link row, Work→About cleaner (24px cards→CTA) */
+#work > div:last-child{margin-top:24px !important}
+
+/* V2.4 ABOUT */
+.about-text p{max-width:60ch;line-height:1.6}
+.checklist li{background:none;border:none;padding:0}
+.tools{gap:6px}
+.tools span{font-size:11px;padding:5px 10px;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--muted)}
+.about-img{background:#000}
+.about-img img{object-position:center}
+
+/* V2.5 SERVICES — lighter: less padding, 21px icons, lower border, 15/13.5, equal heights */
+.services-grid{align-items:stretch}
+.service-card{padding:16px;border-color:rgba(255,255,255,.06);height:100%}
+.service-card .icon{font-size:21px;margin-bottom:8px}
+.service-card .icon svg{width:21px;height:21px}
+.service-card h3{font-size:15px;margin-bottom:6px}
+.service-card p{font-size:13.5px;line-height:1.6}
+
+/* V2.6 CONTACT — one heading kept (config), center-left, labels=meaning/examples in config */
+.contact-grid{align-items:center}
+.contact-form label{color:var(--muted)}
+/* Feedback: small muted inline text, no card bg/border */
+.form-note,.form-note#formNote{color:var(--muted);font-size:12.5px;background:none;border:none;padding:0;min-height:18px}
+/* Send Message = ONLY yellow in contact section, full-width */
+.contact-form button[type="submit"]{background:var(--accent);color:#000;width:100%}
+.contact-form button[type="submit"]:hover{background:var(--accent-2)}
+
+/* V2 mobile keeps: hero stack, single columns, 36px pills scroll, 44px targets */
+@media(max-width:480px){
+  .stats{flex-direction:column;gap:12px}
+  .stats > div{flex-direction:row;gap:10px;align-items:baseline}
+  .hero-cta{gap:12px}
+}
+
+/* P0 form-dropdown hierarchy fixes (P0 1,2,6,7 + P1 8-11) — CSS + behavior only.
+   Scope: #contact .contact-form only. Locks kept: dark form card, 44px controls,
+   yellow Send Message pill (.btn untouched), native select + chevron (appearance,
+   padding-right, cursor untouched), sticky Home-first nav, quality API + hero
+   offsets, copy/IDs/wording untouched. No custom menu, no CTA restyle. */
+#contact .contact-form{padding:clamp(20px, 2.5vw, 22px);gap:16px;height:auto;min-height:0;min-width:0;width:100%;max-width:100%}
+#contact .contact-form label{margin-bottom:-8px}
+#contact .contact-form .btn{margin-top:0}
+#contact .contact-form .form-error{margin-top:-8px;margin-bottom:0}
+/* 1. FOCUS — single subtle accent outline, identical on input/select/textarea.
+   Translucent (not solid #facc15) so it never reads as a second yellow CTA.
+   :focus-visible kept; :focus shares the same treatment for pointer/keyboard parity. */
+#contact .contact-form input:focus,#contact .contact-form select:focus,#contact .contact-form textarea:focus{border-color:rgba(250,204,21,.45);outline:2px solid rgba(250,204,21,.45);outline-offset:2px}
+#contact .contact-form input:focus-visible,#contact .contact-form select:focus-visible,#contact .contact-form textarea:focus-visible{outline:2px solid rgba(250,204,21,.45);outline-offset:2px}
+/* 2. RHYTHM — label→field 8px (16 gap − 8 margin), field→next-label 16px (gap),
+   last-field→CTA 16px (gap, button margin-top 0). Card padding 20-22px via clamp.
+   No fixed height (height auto above). 44px min-height untouched (see §4 rule). */
+/* 4. MOBILE — no overflow to 320px; dropdown stays usable; CTA separation holds. */
+#contact .contact-form input,#contact .contact-form select,#contact .contact-form textarea{max-width:100%}
+@media(max-width:480px){
+  #contact .contact-form{padding:20px}
+}
+
+/* P0-C neutral focus (2026-09-11 consolidation) — form focus ring is neutral,
+   never the yellow button outline. Overrides the translucent-yellow form focus
+   above + the global V3 yellow :focus-visible (non-form elements untouched).
+   Same specificity, later in cascade = wins. */
+#contact .contact-form input:focus,#contact .contact-form select:focus,#contact .contact-form textarea:focus{border-color:rgba(255,255,255,.35);outline:2px solid rgba(255,255,255,.25);outline-offset:2px}
+#contact .contact-form input:focus-visible,#contact .contact-form select:focus-visible,#contact .contact-form textarea:focus-visible{outline:2px solid rgba(255,255,255,.25);outline-offset:2px}
+
+/* COMPOSITION-CONSISTENCY PASS (2026-09-11) — rhythm + Home↔Work unity, CSS only.
+   Scope: Work rhythm exact, card footer unity, metadata presentation, contact
+   balance (type/spacing only), responsive caps. Locks kept: copy/titles/meta
+   VALUES/IDs/URLs/thumbnails/player/quality/offset/nav/filter logic/palette,
+   native 16/9 + 9/16 ratios, sticky Home-first nav, honest empty states,
+   badge/play/filter treatments, no new sections/effects/animations/SEO.
+   Append-only: later cascade wins, no earlier lines touched (concurrent-edit safe). */
+
+/* 1. WORK RHYTHM — label→grid 16, Long grid→Short label 48 exact (was 48-64
+   clamp growing to 64 @1440), grid→CTA 40-48, CTA→footer 48-64. Subheads
+   identical (re-asserted, stored text verbatim, casing via existing none). */
+.work-page .work-subhead{margin:0 0 16px}
+#workSectionShort{margin-top:48px}
+.work-page .work-cta{margin-top:clamp(40px, 5vw, 48px)}
+.work-page{padding-bottom:clamp(48px, 5vw, 64px)}
+#workSectionLong .work-subhead,#workSectionShort .work-subhead{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--muted);margin:0 0 16px;padding:0;background:none;border:none}
+
+/* 2+3. HOME↔WORK CARD UNITY + METADATA PRESENTATION — same shell already
+   (radius 14/border/bg/hover shared .card); here: same title line-height,
+   no min-title-area (equal-row forcing removed — caused title→meta bloat),
+   same meta size/color/line-height/ellipsis both formats both pages.
+   Values/taxonomy untouched (presentation only). */
+.card-body h3,.grid-short .card-body h3,#workGridShort .card-body h3{line-height:1.35;min-height:0}
+.grid-short .card-body p,#workGridShort .card-body p{font-size:12px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+
+/* 2b. MOBILE SHORT CAP UNITY — superseded by MASTER GRID <480px cap above
+   (both pages, centered 320px single column). Kept as empty marker. */
+
+/* 4. CONTACT BALANCE — left column via typography/spacing only. No new copy,
+   no boxes, form structurally untouched (no .contact-form rules here).
+   Email (first link) weight 600 for prominence; link rhythm 8→12px + top
+   16→18px for air; heading scale locked (canonical H2, no inflation). */
+#contact .contact-links{gap:12px;margin-top:18px}
+#contactLinks a:first-child{font-weight:600;letter-spacing:-.01em}
+
+/* ============================================================
+   V3.0 BUG + COMPOSITION correction pass — targeted fixes only.
+   Order P1 first. No features/animations/effects, no palette/
+   gradients/glows/blobs/particles/glassmorphism. Tokens ONLY
+   8/12/16/24/32/40/48/64 for HEADER→filters→Long→cards→Short→
+   cards→CTA→footer. Config/IDs/copy/URLs/thumbnails/player/logic
+   untouched. Append-only: later cascade wins, no earlier lines touched.
+   ============================================================ */
+
+/* 1. P1 media deterministic — wrapper controls height, img fills cover.
+   Long 16:9 / Short 9:16 intentionally different. No img-driven expansion
+   (img aspect auto, width+height 100%), no arbitrary max-height on cards.
+   Home (#projectGrid*) + Work (#workGrid*) share same .card renderer. */
+.grid-long .card-media,#workGridLong .card-media{aspect-ratio:16/9}
+.grid-short .card-media,#workGridShort .card-media{aspect-ratio:9/16}
+.card-media{min-width:0;overflow:hidden}
+.card-media img{width:100%;height:100%;object-fit:cover;aspect-ratio:auto;display:block}
+.card-media,.card-media img{max-height:none}
+
+/* 2. Home grid dominance — mass via proportions, not type shrink.
+   2-col long desktop / 1-col ≤640px kept. Short 320 cap centered both pages
+   (no edge touch, no h-scroll). Title 2-clamp + meta ellipsis safe kept.
+   Remove 2-line min-height mass (was calc(1.35em*2), added mass without value). */
+.card-body h3,.grid-short .card-body h3,#workGridShort .card-body h3{min-height:unset}
+/* ≤640px single-column lock superseded by MASTER GRID (base 1-col long,
+   short 1-col <480 / 2-col 480-639). Kept as empty marker. */
+
+/* 3. Work composition tokens — HEADER→filters→Long→cards→Short→cards→CTA→
+   footer uses ONLY 8/12/16/24/32/40/48/64. Header+Long share .container column
+   (edges align), Shorts 3-col same column wider allowed (edges align), CTA below. */
+.work-page{padding-top:clamp(40px, 5vw, 48px)}
+.work-page .section-head{margin-bottom:24px}
+#work{padding-top:24px}
+.hero{padding-bottom:24px}
+@media(min-width:1024px){
+  .grid-long,#workGridLong{gap:16px}
+  #workGridShort{gap:16px}
+}
+@media(min-width:1440px){
+  .grid-long,#workGridLong{gap:16px}
+}
+.card-body{padding:12px 12px}
+.grid-short .card-body{padding:8px 12px}
+#workSectionShort{margin-top:48px}
+.work-page .work-cta{margin-top:clamp(40px, 5vw, 48px)}
+.work-page{padding-bottom:clamp(48px, 5vw, 64px)}
+
+/* 4. Filter — desktop heading-left/filter-right vertically centered both pages;
+   mobile single-row scroll nowrap, no wrap/overflow. Small pill kept (36px). */
+#work .section-head{align-items:center}
+@media(max-width:640px){
+  #work .section-head{flex-direction:column;align-items:stretch}
+  #work .work-tabs{align-self:flex-start;max-width:100%}
+}
+
+/* 5. Hero — H1 30-56 intact (lock 32px floor @480, inside 30-56), yellow span
+   focal kept, stack separation deliberate, no excess height (top 32-40 + bottom 24). */
+@media(max-width:480px){
+  .hero h1{font-size:32px}
+}
+
+/* 6. About — 5.5MB full-body is temp placeholder (owner-gated, no CSS fix).
+   No object-position tweaks here (existing top-center kept). H2 strong / para
+   quiet / checklist readable / pills secondary kept, no added copy. No rules. */
+
+/* 7. Services — equal-height desktop (stretch+100%), natural mobile (start+auto),
+   icon→title→desc order + 16px padding kept. No redesign. No rules. */
+
+/* 8. Contact — balance tops (start, not center: left near form top, no artificial
+   gap), socials grouped (gap 12 + top 16), no box/divider on left, email semibold
+   kept. Form controls untouched. Select ONE-field guard is label-wrapper only
+   (text-only, no box) — no logic, no select/input/textarea/button sizing change. */
+.contact-grid,#contact .contact-grid{align-items:start}
+#contact .contact-links{margin-top:16px}
+#contactLinks a:first-child{font-weight:600}
+#contact .contact-form label{background:none;border:none;padding:0}
+
+/* 9. Nav/type — overlay drawer below 64px (absolute, no push), SAHIL stable,
+   flat backdrop dim (no blur/shadow/gradient/glass) + ESC/outside-click close
+   (JS below). Type floors: H3 15min / body 14-15 (minimal floor bumps only),
+   H2 28-36 / eyebrow 12-700 / meta 12 / buttons 14-600 kept. Zero red borders
+   (verified: only functional #f87171 aria-invalid, no debug red). */
+@media(max-width:640px){
+  .mobile-menu.open{position:absolute;top:64px;left:0;right:0;z-index:49}
+}
+body:has(.mobile-menu.open)::after{content:"";position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:40}
+.card-body h3{font-size:15px}
+.grid-short .card-body h3{font-size:15px}
+.service-card p{font-size:14px}
+
+/* ============================================================
+   CSS-FIRST COMPOSITION REFINEMENT (2026-09-11) — no redesign,
+   no new components. Append-only overrides; earlier lines untouched
+   (concurrent-edit safe). Scope: P0 card-scale → container → tracking
+   → card body → contact → home header/about. Locks kept: copy/titles/
+   metadata/IDs/URLs/thumbs/palette/player/quality/offsets/nav/filter
+   logic untouched; native 16/9 + 9/16; sticky Home-first nav; Title Case
+   verbatim (text-transform:none kept); no animations/sections/SEO.
+   ============================================================ */
+
+/* 1. P0 RESPONSIVE CARD-SCALING — root cause + lock.
+   Cause: overlapping grid definitions across 640/1024/1440 layers left
+   two thresholds competing (base 1-col vs 640 2/3-col); at 600-640 a Long
+   1-col spans ~600px (reads massive vs 2-col ~293px just above 640), and
+   at 641-767 a Short 3-col drops to ~193px (reads tiny). No vw/clamp was
+   on .card itself — width came from grid fr + container clamp, media from
+   aspect-ratio (correct architecture). Fix: single explicit lock here —
+   <640 Long 1-col full / Short 1-col centered narrow; 640-767 Long 1-col /
+   Short 2-col; 768-1023 Long 2-col / Short 2-col; >=1024 Long 2-col /
+   Short 3-col; >=1440 same 2/3 (never 4). Gaps 20px (in 20-24 spec).
+   No vw in card dims, fixed px gaps, aspect-ratio only. Long 1-col stays
+   full-width (16/9 landscape stays short, no cap needed). */
+/* MASTER GRID — single responsive spec (replaces all earlier grid-column
+   layers): Long 1 → 2 @600 → 3 @900. Short 1 → 2 @480 → 3 @768 → 4 @1200.
+   Gaps <600:12, 600-899:16, >=900:20. Shared by Home + Work grids. */
+.grid-long,#workGridLong,#projectGridLong{grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}
+.grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}
+@media(min-width:480px){
+  .grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:600px){
+  .grid-long,#workGridLong,#projectGridLong{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .grid-short,#workGridShort,#projectGridShort{gap:16px}
+}
+@media(min-width:768px){
+  .grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(min-width:900px){
+  .grid-long,#workGridLong,#projectGridLong{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+  .grid-short,#workGridShort,#projectGridShort{gap:20px}
+}
+@media(min-width:1200px){
+  .grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:479px){
+  #projectGridShort,#workGridShort{max-width:320px;margin-inline:auto}
+}
+/* Card dims never vw-scaled: fr width + aspect-ratio height only, fixed px internals.
+   Work Long gap 20px desktop (20px spec, token 20); Short gap 20px (in 20-24 spec). */
+.card{width:100%;min-width:0;overflow:hidden;border-radius:14px;border:1px solid var(--border)}
+.grid-long .card-media,#workGridLong .card-media{aspect-ratio:16/9}
+.grid-short .card-media,#workGridShort .card-media{aspect-ratio:9/16}
+.card-media{min-width:0;overflow:hidden;background:#000}
+.card-media img{width:100%;height:100%;object-fit:cover;object-position:center;aspect-ratio:auto;display:block;background:#000}
+.card-media,.card-media img{max-height:none}
+/* Short ≤640px width clamp superseded by MASTER GRID <480px 320px cap.
+   Kept as empty marker. */
+
+/* 2. CONTAINER ALIGNMENT — one shared .container column edges for Work head,
+   both grids, CTA (no extra side margins; grids width:100% already). Rhythm:
+   label→grid 16px; Long grid→Short label 48px exact; grid→CTA 40-48px. */
+.work-page .work-subhead,#workSectionLong .work-subhead,#workSectionShort .work-subhead{margin:0 0 16px}
+#workSectionShort{margin-top:48px}
+.work-page .work-cta{margin-top:clamp(40px,5vw,48px)}
+.work-page{padding-bottom:clamp(48px,5vw,64px)}
+#work .grid-long,#work .grid-short{width:100%}
+
+/* 3. TRACKING — section labels .04em max 13px/600 muted plain (no box); titles
+   -0.01em; nav/body/meta neutral. Title Case kept (none). Thumbnail pills hidden
+   visually only via final badge rule (data/filtering kept, no JS change). */
+.work-page .work-subhead,.work-subhead{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--muted);background:none;border:none;padding:0;text-transform:none}
+.card-body h3,.service-card h3{letter-spacing:-.01em}
+.badge{letter-spacing:.02em;text-transform:none}
+.nav-links a,.mobile-menu a,.btn,.tab-btn{letter-spacing:0}
+.hero-desc,.about-text p,.service-card p,.contact-grid p{letter-spacing:0}
+.card-body p{letter-spacing:0}
+
+/* 4. CARD BODY — one shared renderer (all cards): top 12 / gap 8 / bottom 14,
+   no 2-line reserve (reserve caused title→meta bloat), short keeps narrower
+   shell + smaller type, same vertical rhythm. Hover unchanged. */
+.card-body{padding:12px 14px 14px;gap:8px}
+.grid-short .card-body{padding:12px 12px 14px;gap:8px}
+.card-body h3{font-size:14px;font-weight:600;line-height:1.35;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:0;overflow-wrap:break-word}
+.grid-short .card-body h3,#workGridShort .card-body h3{font-size:13px;line-height:1.35;min-height:0}
+.card-body p{font-size:12px;color:var(--muted);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
+.grid-short .card-body p{font-size:11px}
+.play-badge{width:44px;height:44px;font-size:14px;box-shadow:none}
+.card:hover{transform:translateY(-4px);border-color:rgba(250,204,21,.28);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.card:hover .card-media img{transform:scale(1.02)}
+.card:hover .play-badge{transform:scale(1.05)}
+/* play stays 44px ≤640px (L-02 lock, centered, no glow/animation) */
+
+/* 5. CONTACT — left balanced via tops (start, no fixed heights, no artificial
+   gap); select ONE clean rectangle (100%, border-box, single centered arrow,
+   no extra box); label 6-8px / field gaps 12-16px / button 16-18px. */
+.contact-grid,#contact .contact-grid{align-items:start}
+#contact .contact-grid > div{min-width:0}
+#contact .contact-form{height:auto;min-height:0}
+#contact .contact-links{gap:12px;margin-top:16px}
+.contact-form select,.contact-form input,.contact-form textarea{box-sizing:border-box}
+.contact-form select,#contact .contact-form select{width:100%;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a1a1aa' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px;padding-right:36px;cursor:pointer}
+#contact .contact-form{gap:16px}
+#contact .contact-form label{margin-bottom:-8px}
+#contact .contact-form .btn{margin-top:0}
+
+/* 6. HOME header/filter + ABOUT — Home header one flex header end-aligned
+   space-between wrap (mobile stack); Work page header keeps centered-right
+   (existing P2.2, untouched here except re-assert). About checklist lh 1.5;
+   fixed check width needs span wrapper (HTML) — deferred to avoid touching
+   index.html under concurrent edits (CSS cannot split "✓ text" text node).
+   About 40/60 kept, no enlargement (420px cap kept, portrait top-center). */
+#work .section-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px 24px}
+.work-page .section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px 24px}
+.work-page .work-tabs{flex-wrap:wrap}
+@media(max-width:640px){
+  #work .section-head,.work-page .section-head{flex-direction:column;align-items:stretch}
+  #work .work-tabs,.work-page .work-tabs{align-self:flex-start;max-width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #work .work-tabs::-webkit-scrollbar,.work-page .work-tabs::-webkit-scrollbar{display:none}
+  #work .work-tabs .tab-btn,.work-page .work-tabs .tab-btn{flex:0 0 auto;white-space:nowrap}
+}
+.checklist li{line-height:1.5}
+.about-img{width:100%;max-width:100%}
+@media(min-width:769px){
+  .about-img{max-width:420px}
+}
+.about-img img{object-position:top center}
+.service-card p{font-size:14px}
+
+/* V4 interaction layer removed 2026-09-11 — V3 baseline restored (no reveals, no WATCH overlay, no case-study, no BA slider, no hero-scroll, no timeline). */
+
+/* CSS-FIRST follow-up: ID-specificity override for section-label tracking.
+   Prior #workSectionLong/#workSectionShort rule (1,1,0, .08em) beats the
+   class-only .04em above. Re-assert .04em with same IDs so later+wins.
+   No other values change; concurrent V4 blocks untouched. */
+#workSectionLong .work-subhead,#workSectionShort .work-subhead{letter-spacing:.04em}
+
+/* Work polish (2026-09-11) — hide thumbnail-overlay pills visually only (Talking Head + Short).
+   Short hide kept (V2.3 !important); Long hide here. Data/logic untouched: config.js
+   category/format/meta + script.js badge render + filtering + below-thumb meta kept.
+   Baked-in Quick disclaimer is YouTube thumbnail pixels (no DOM, untouched). Play kept 44px. */
+.grid-long .card-media .badge,
+#projectGridLong .card-media .badge,
+#workGridLong .card-media .badge{display:none}
+
+/* V3.0 WORK PAGE VISUAL REFINEMENT — micro identity layer only (2026-09-11).
+   No redesign, no sections, no HTML/JS. Append-only; later cascade wins.
+   P0 badges already hidden above (kept). Baked-in thumbnail pixels untouched.
+   P1 subhead marker: 5px yellow square + 8px gap, label stays muted.
+   P1 hover: keep translateY(-2px), border only slightly brighter with a
+   whisper of yellow, no glow/shadow/scale change. P2 filter: existing
+   .tab-btn 220ms transition kept — no rule needed here. */
+#workSectionLong .work-subhead,
+#workSectionShort .work-subhead{display:flex;align-items:center;gap:8px}
+#workSectionLong .work-subhead::before,
+#workSectionShort .work-subhead::before{content:"";width:5px;height:5px;border-radius:1px;background:var(--accent);flex-shrink:0}
+/* V3.0 INTERACTION/HOVER REFINEMENT — micro-interaction pass only (2026-09-11).
+   Audit: card -4px + whisper-yellow border + subtle black shadow + img 1.02 + play 1.05(∈1.04–1.06) +
+   nav/filter/primary-ghost/service hovers already restrained and in range —
+   untouched. Play is pointer-events:none so card-hover scale is the only scale
+   (direct-hover split N/A). This block adds ONLY the missing pieces, one small
+   block, easy to revert. No glow/gradients/yellow fills (hover shadow is flat black, subtle). */
+.card-body h3,.service-card h3{transition:color 180ms ease}
+.card:hover .card-body h3,.service-card:hover h3{color:#fff}
+.btn-ghost:hover{border-color:rgba(255,255,255,.16)}
+.contact-links a{transition:color 180ms ease,text-decoration-color 180ms ease}
+.contact-links a:hover{text-decoration-color:var(--accent)}
+.footer a{transition:color 180ms ease}
+.footer a:hover{color:var(--text)}
+@media (hover:none){
+  .card:hover{transform:none;box-shadow:none}
+  .card:hover .card-media img{transform:none}
+  .card:hover .play-badge{transform:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .card-body h3,.service-card h3,.contact-links a,.footer a{transition:none !important}
+}
+
+/* V3.0 MOBILE COMPOSITION FIX — Short-form narrow-mobile alignment (2026-09-11).
+   ≤640px the short grid is a fluid centered column (160–210px clamp, rule above) while the label
+   sat at the content edge, leaving a detached full-width container around a
+   narrow stack. Center the label (marker + text) as one unit so its center
+   matches the card column and the already-centered CTA. Long-form, desktop/
+   tablet, card width/ratio, vertical rhythm, badges all untouched. */
+@media(max-width:640px){
+  #workSectionShort .work-subhead{justify-content:center;text-align:center}
+  #workSectionShort{margin-top:32px}
+}
+
+/* =========================================================
+   INTERACTION SYSTEM — HOVER / FOCUS (hover pass 2026-09-11).
+   One coherent language: cards strongest, buttons/services
+   medium, links/nav subtle, text almost nothing. Transform and
+   overlay effects live ONLY inside (hover:hover)+(pointer:fine)
+   so touch never keeps a sticky hover state. Color/focus rules
+   stay global as the keyboard/tap feedback path. This block is
+   later-in-cascade and authoritative over earlier hover rules.
+   ========================================================= */
+:root{--ease-out:cubic-bezier(.16,1,.3,1)}
+
+/* ---- project cards: restrained lift, scoped to hovered card only ---- */
+.card{transition:transform .26s var(--ease-out),border-color .26s ease,box-shadow .26s ease}
+.card .card-media img{transition:transform .28s var(--ease-out)}
+.play-badge{transition:transform .25s var(--ease-out),opacity .25s ease,box-shadow .25s ease;z-index:2}
+@media (hover:hover) and (pointer:fine){
+  .card:hover{transform:translateY(-4px) scale(1.01);border-color:rgba(250,204,21,.28);box-shadow:0 12px 28px rgba(0,0,0,.35),0 0 20px rgba(250,204,21,.06)}
+  .card:hover .card-media img{transform:scale(1.03)}
+  .card:hover .play-badge{transform:scale(1.06);box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .card:hover .card-media:hover .play-badge{transform:scale(1.08)}
+}
+
+/* ---- buttons: one CTA language ---- */
+.btn{transition:transform .25s var(--ease-out),background .25s ease,box-shadow .25s ease,border-color .25s ease,color .25s ease}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.45);filter:brightness(1.05)}
+}
+
+/* ---- nav: accent underline indicator (not on button-style links) ---- */
+.nav-links a{position:relative;transition:color .2s ease}
+.nav-links a::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;border-radius:2px;background:var(--accent);transform:scaleX(0);transform-origin:left}
+@media (hover:hover) and (pointer:fine){
+  .nav-links a:hover::after,.nav-links a.active::after,.nav-links a[aria-current="page"]::after{transform:scaleX(1)}
+}
+.nav-links a.btn::after{content:none}
+
+/* ---- services: quiet lift + icon response ---- */
+.service-card{transition:transform .3s var(--ease-out),border-color .3s ease,box-shadow .3s ease}
+.service-card .icon{transition:transform .3s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .service-card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.42)}
+  .service-card:hover .icon{transform:translateY(-2px) scale(1.06)}
+}
+
+/* ---- about image: clipped zoom + border response ---- */
+.about-img img{transition:transform .35s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .about-img:hover img{transform:scale(1.03)}
+  .about-img:hover{border-color:rgba(255,255,255,.14)}
+}
+
+/* ---- links/contact/stats: restrained color transitions ---- */
+.contact-links a,.footer a{transition:color .2s ease}
+.contact-links a:hover,.footer a:hover{color:var(--text)}
+.stats>div strong{transition:color .25s ease}
+@media (hover:hover) and (pointer:fine){
+  .stats>div:hover strong{color:#fff}
+}
+
+/* ---- touch: no sticky transforms (color/focus feedback unaffected) ---- */
+@media (hover:none),(pointer:coarse){
+  .card:hover,.btn:hover,.service-card:hover{transform:none}
+}
+
+/* ---- reduced motion: kill transforms/zooms/overlay, keep color ---- */
+@media (prefers-reduced-motion:reduce){
+  .card,.card .card-media img,.play-badge,.btn,.service-card,.service-card .icon,.about-img img{transition:none !important;transform:none !important}
+  .card-media::after{display:none}
+  .nav-links a::after{transition:none}
+}
+
+/* HOVER-POSITION FIX (2026-09-11) — architectural containment, no nudge hacks.
+   Root cause: premium hover transforms/scales/overlays lived in two layers —
+   an early global hover layer (fires on touch, sticks after tap, then reads
+   as a ghost highlight in another region after scrolling through
+   Services/About) plus the correct fine-pointer layer. No shared JS highlight
+   element exists (verified by search: no mousemove highlight in script.js) —
+   so the fix is containment + capability gating, not nudging.
+   - Every hover stays on its hovered element (hover on the card / service /
+     about image / button / nav item itself; the browser clears it on
+     pointerleave, scroll-away, and page/section change — no global state).
+   - Pseudos live only inside their own positioned parent (.card-media and
+     nav links already positioned; card / service-card / about-img made
+     positioned here with no offsets so no layout shift; no page-level box).
+   - Fine-pointer premium values untouched (lift / zoom / accent border / soft
+     shadow / play / button / nav response still defined in the fine-pointer
+     block above). This block only (a) guarantees in-element containment and
+     (b) turns OFF transform/scale/overlay/shadow/filter hovers on touch so
+     they never stick. Color/border/focus feedback stays global as the
+     tap/keyboard path. No offset nudges, no axis-shift hacks, no absolute
+     units, no size queries, no priority flags, no magic coords here. */
+.card{position:relative}
+.service-card{position:relative}
+.about-img{position:relative}
+.card-media{position:relative;overflow:hidden}
+@media (hover:none),(pointer:coarse){
+  .card:hover{transform:none;box-shadow:none}
+  .btn:hover{transform:none;box-shadow:none;filter:none}
+  .service-card:hover{transform:none;box-shadow:none}
+  .play-btn:hover{transform:none}
+  .lightbox-close:hover{transform:none}
+  .card:hover .card-media img{transform:none}
+  .about-img:hover img{transform:none}
+  .service-card:hover .icon{transform:none}
+  .card:hover .play-badge{transform:none;box-shadow:none;filter:none}
+  .card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{transform:none;box-shadow:none;filter:none}
+  .card-media::after,.card:hover .card-media::after{opacity:0}
 }

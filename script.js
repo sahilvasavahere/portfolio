@@ -58,6 +58,107 @@ function handleThumbError(img){
   img.src = PLACEHOLDER_SVG;
 }
 
+// P2.4 case/text presentation — presentation layer only (CSS text-transform, never content conversion).
+// Priority: component setting → global → component default. Missing/invalid → component default.
+// P2.4 defaults: all natural (normal/none) — stored Title Case renders verbatim; never capitalize free text (acronym-safe). Uppercase still available explicitly.
+function resolveTextCase(compVal, globalVal, compDefault){
+  const clean = v => (typeof v === 'string' ? v.trim().toLowerCase() : 'default');
+  const c = clean(compVal), g = clean(globalVal);
+  if(c === 'uppercase' || c === 'lowercase' || c === 'capitalize' || c === 'normal') return c;
+  if(g === 'uppercase' || g === 'lowercase' || g === 'capitalize' || g === 'normal') return g;
+  return compDefault || 'normal';
+}
+function textCaseToTransform(v){
+  if(v === 'uppercase') return 'uppercase';
+  if(v === 'lowercase') return 'lowercase';
+  if(v === 'capitalize') return 'capitalize';
+  return 'none';
+}
+function globalTextCase(){
+  try{ return (CONTENT && CONTENT.design && CONTENT.design.textCase) || 'default'; }catch(e){ return 'default'; }
+}
+function projectBadgeCase(p){
+  const comp = (p && (p.categoryCase || (p.display && p.display.categoryCase))) || 'default';
+  return resolveTextCase(comp, globalTextCase(), 'normal');
+}
+
+// Shared project-card grid renderer (homepage + Work page). Top-level so
+// V3 service icons (presentation only — stored emoji untouched).
+// Monochrome inline SVG, 24px via CSS, stroke currentColor 1.5px.
+// Duplicate 🎬 resolved visually: YouTube=play, Ads=megaphone.
+function serviceIconSvg(icon, title){
+  const t = (title||"").toLowerCase();
+  const wrap = inner => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${inner}</svg>`;
+  if(/podcast|mic|audio/.test(t) || icon==="🎙️") return wrap(`<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>`);
+  if(/reel|short|bolt|⚡/.test(t) || icon==="⚡") return wrap(`<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>`);
+  if(/ad|promo|mega/.test(t)) return wrap(`<path d="M3 11v3l4 1 2 5h2l-2-5 9 3V6L6 10H3z"/><path d="M18 8a3 3 0 0 1 0 6"/>`);
+  if(/film|🎞/.test(t) || icon==="🎞️") return wrap(`<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 10h4M3 14h4M17 10h4M17 14h4"/>`);
+  // default YouTube / clapper
+  return wrap(`<rect x="3" y="6" width="18" height="12" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/>`);
+}
+// V3 form labels (presentation/a11y only — text comes from config *Label, placeholders stay as examples).
+function ensureContactLabels(form){
+  if(!form) return;
+  const cfg = CONTENT?.contact?.form || {};
+  const defs = [
+    ['name','input[name="name"]', cfg.nameLabel || 'Your Name'],
+    ['email','input[name="email"]', cfg.emailLabel || 'Your Email'],
+    ['service','select[name="service"]', cfg.serviceLabel || 'Service'],
+    ['message','textarea[name="message"]', cfg.messageLabel || 'Message'],
+  ];
+  defs.forEach(([fid, sel, text])=>{
+    const el = form.querySelector(sel);
+    if(!el) return;
+    if(!el.id) el.id = `contact-${fid}`;
+    if(!el.getAttribute('aria-label')) el.setAttribute('aria-label', text);
+    const prev = el.previousElementSibling;
+    if(prev && prev.tagName==='LABEL' && prev.getAttribute('for')===el.id) { prev.textContent = text; return; }
+    const label = document.createElement('label');
+    label.setAttribute('for', el.id);
+    label.textContent = text;
+    el.insertAdjacentElement('beforebegin', label);
+  });
+}
+// both pages use one implementation; inputs only, no page assumptions
+// beyond the passed grid element.
+function renderGrid(projects, gridEl){
+  if(!gridEl) return;
+  if(!projects.length){
+    gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#a1a1aa">No videos in this category yet.</div>`;
+    return;
+  }
+  gridEl.innerHTML = projects.map(p=>{
+    const yid = p.youtubeId || youtubeIdFromUrl(p.youtubeUrl);
+    const isVideo = yid && yid.length===11;
+    const d = p.display || {};
+    const customThumb = (p.thumbnail||"").trim();
+    const showThumb = d.thumbnail!==false;
+    const primaryThumb = showThumb ? (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : PLACEHOLDER_SVG)) : PLACEHOLDER_SVG;
+    const badgeCase = projectBadgeCase(p);
+    const badge = d.category===false ? '' : `<span class="badge" style="text-transform:${textCaseToTransform(badgeCase)}">${(p.category || (p.format==='short' ? "Reels" : "Video")).replace(/</g,'&lt;')}</span>`;
+    const play = (d.playButton===false || !isVideo) ? '' : `<span class="play-badge">▶</span>`;
+    const youtubeUrl = p.youtubeUrl || (yid ? `https://www.youtube.com/watch?v=${yid}` : "");
+    const format = p.format || 'long';
+    const safeThumb = (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : "")).replace(/"/g,'&quot;');
+    const alt = (p.thumbnailAlt || p.title || "").replace(/"/g,'&quot;');
+    const desc = (p.description||"").replace(/"/g,'&quot;');
+    const fit = p.thumbnailFit || 'cover';
+    const cardLabel = ((isVideo ? 'Play ' : 'View ') + (p.title || 'Untitled')).replace(/"/g, '&quot;');
+    const title = d.title===false ? '' : `<h3>${(p.title||"Untitled").replace(/</g,'&lt;')}</h3>`;
+    const meta = d.meta===false ? '' : `<p>${(p.meta||"").replace(/</g,'&lt;')}</p>`;
+    const descHtml = (d.description===false || !desc) ? '' : `<p style="font-size:11px;color:#71717a;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px">${desc.replace(/</g,'&lt;')}</p>`;
+    return `
+    <article class="card" data-youtube-url="${youtubeUrl}" data-youtube-id="${yid||""}" data-format="${format}" data-title="${(p.title||"").replace(/"/g,'&quot;')}" data-thumb="${safeThumb}" data-desc="${desc}" data-thumb-alt="${alt}" tabindex="0" role="button" aria-label="${cardLabel}">
+      <div class="card-media" style="${showThumb ? '' : 'display:none'}">
+        <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" decoding="async" onerror="handleThumbError(this)" style="object-fit:${fit};${showThumb ? '' : 'display:none'}">
+        ${badge}
+        ${play}
+      </div>
+      <div class="card-body">${title}${meta}${descHtml}</div>
+    </article>`;
+  }).join('');
+}
+
 // Hover preview — lightweight CSS only (thumbnail zoom + play badge)
 // Iframe hover preview disabled for reliability — click-to-play is primary
 let activePreview = null;
@@ -95,7 +196,7 @@ function applySections(c){
       const el = map[sec.id];
       if(!el) return;
       // hero/showreel handled elsewhere, but also respect sections visibility
-      if(sec.visible===false){
+      if(!isVisible(sec)){
         el.style.display='none';
         el.setAttribute('aria-hidden','true');
       } else {
@@ -104,18 +205,24 @@ function applySections(c){
       }
     });
   }
-  // Navigation — separate showInNav from visibility (control center)
-  const navIds = sections.filter(s=>{
+  // Navigation — separate showInNav from visibility (control center).
+  // Base gate via getVisibleSections() (order-preserving), then nav opt-in.
+  const navIds = getVisibleSections(sections).filter(s=>{
     const isNav = s.showInNav !== undefined ? s.showInNav : !['hero','showreel'].includes(s.id);
-    return isNav && s.visible!==false;
+    return isNav;
   }).map(s=>s.id);
   // Also include custom sections if they have been injected
   const customRoot = document.getElementById('customSectionsRoot');
   if(customRoot){
-    // render all custom sections (visible or not, hidden will be display:none)
+    // Filter-first: OFF custom sections never enter DOM/media (no node, no
+    // src, no listeners). Base gate via isVisible() BEFORE createElement.
     sections.filter(s=> s.type==='custom').forEach(sec=>{
+      const secVisible = isVisible(sec);
       let el = document.getElementById(sec.id);
-      const isVisible = sec.visible!==false;
+      if(!secVisible){
+        if(el) el.remove();
+        return;
+      }
       if(!el){
         el = document.createElement('section');
         el.id = sec.id;
@@ -123,11 +230,12 @@ function applySections(c){
         el.setAttribute('data-section','custom');
         customRoot.appendChild(el);
       }
-      el.style.display = isVisible ? '' : 'none';
-      if(isVisible){
+      el.style.display = '';
+      {
         // build content from elements
-        const elements = (sec.elements||[]).filter(e=> e.visible!==false).sort((a,b)=>(a.order||0)-(b.order||0));
-        let html = `<div class="section-head"><h2>${(sec.title||'Section').replace(/</g,'&lt;')}</h2></div>`;
+        const elements = getVisibleItems(sec.elements).sort((a,b)=>(a.order||0)-(b.order||0));
+        const secTitleCase = resolveTextCase(sec.titleCase, globalTextCase(), 'normal');
+        let html = `<div class="section-head"><h2 style="text-transform:${textCaseToTransform(secTitleCase)}">${(sec.title||'Section').replace(/</g,'&lt;')}</h2></div>`;
         if(elements.length){
           html += elements.map(el=>{
             const t = (el.type||'paragraph').toLowerCase();
@@ -136,7 +244,7 @@ function applySections(c){
             const alt = (el.alt||'').replace(/"/g,'&quot;');
             if(t==='heading') return `<h3 style="font-family:Space Grotesk,sans-serif;font-size:clamp(20px,3vw,28px);margin:12px 0">${content}</h3>`;
             if(t==='paragraph') return `<p style="color:#a1a1aa;margin:8px 0;line-height:1.6">${content}</p>`;
-            if(t==='image' && el.url) return `<div style="margin:12px 0;border-radius:12px;overflow:hidden;border:1px solid #252529"><img src="${url}" alt="${alt}" style="width:100%;height:auto;display:block;object-fit:cover" loading="lazy" onerror="this.style.display='none'"></div>`;
+            if(t==='image' && el.url) return `<div style="margin:12px 0;border-radius:12px;overflow:hidden;border:1px solid #252529"><img src="${url}" alt="${alt}" style="width:100%;height:auto;display:block;object-fit:cover" loading="lazy" decoding="async" onerror="this.style.display='none'"></div>`;
             if(t==='video' && el.url) {
               const vid = youtubeIdFromUrl(el.url) || el.url;
               if(vid && vid.length===11) return `<div style="margin:12px 0"><a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#facc15;color:#000;padding:10px 16px;border-radius:999px;font-weight:600;text-decoration:none">▶ Watch Video — ${content||'YouTube'}</a></div>`;
@@ -157,7 +265,6 @@ function applySections(c){
         }
         el.innerHTML = html;
       }
-      if(!isVisible && el) el.innerHTML='';
     });
   }
   // Build nav links
@@ -166,28 +273,44 @@ function applySections(c){
   if(navContainer){
     const labelMap = {work:'Work', about:'About', services:'Services', contact:'Contact'};
     const contactVisible = navIds.includes('contact');
-    let html = '';
+    // Global nav: Home first, then sections. Active derives from the page
+    // (work.html -> Work, otherwise Home); section anchors never go active.
+    const onWorkPage = !!window.WORK_PAGE;
+    const navActiveAttr = (isHome, isWork)=>{
+      const active = onWorkPage ? isWork : isHome;
+      return active ? ' class="active" aria-current="page"' : '';
+    };
+    // P2.1 header lock: on work.html, bare "#id" anchors would stay on work page;
+    // prefix with index.html so About/Services/Contact always resolve home (defensive; currently work page keeps static nav).
+    const navHrefFor = (raw, fallbackId)=>{
+      let h = (raw && raw.trim()) ? raw.trim() : `#${fallbackId}`;
+      if(onWorkPage && h.startsWith('#')) return 'index.html' + h;
+      return h;
+    };
+    let html = `<a href="index.html"${navActiveAttr(true, false)}>Home</a>`;
     // Respect order: navIds already sorted by sections order via filter on sorted sections
     navIds.forEach(id=>{
       if(id==='contact') return; // handle as button last
       const sec = sections.find(s=>s.id===id);
-      const label = (sec?.title) || labelMap[id] || id;
-      const href = (sec?.href && sec.href.trim()) ? sec.href.trim() : `#${id}`;
+      // Global nav label for Work stays "Work" even though the homepage
+      // section title reads "Selected Work".
+      const label = id==='work' ? 'Work' : ((sec?.title) || labelMap[id] || id);
+      const href = navHrefFor(sec?.href, id);
       const isExternal = /^https?:\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('tel:');
       const target = isExternal ? ' target="_blank" rel="noopener"' : '';
-      html += `<a href="${href.replace(/"/g,'&quot;')}"${target}>${label.replace(/</g,'&lt;')}</a>`;
+      html += `<a href="${href.replace(/"/g,'&quot;')}"${navActiveAttr(false, id==='work')}${target}>${label.replace(/</g,'&lt;')}</a>`;
     });
     if(contactVisible){
       const contactSec = sections.find(s=>s.id==='contact');
-      const contactHref = (contactSec?.href && contactSec.href.trim()) ? contactSec.href.trim() : '#contact';
+      const contactHref = navHrefFor(contactSec?.href, 'contact');
       const isExt = /^https?:\/\//.test(contactHref) || contactHref.startsWith('mailto:');
       const target = isExt ? ' target="_blank" rel="noopener"' : '';
       const contactLabel = contactSec?.title || 'Contact';
-      // Contact as button style unless external
+      // V2 L3: Contact is ghost/neutral — yellow reserved for My Work / Send Message only.
       if(isExt){
         html += `<a href="${contactHref.replace(/"/g,'&quot;')}"${target}>${contactLabel.replace(/</g,'&lt;')}</a>`;
       } else {
-        html += `<a href="#contact" class="btn btn-sm">${contactLabel.replace(/</g,'&lt;')}</a>`;
+        html += `<a href="${contactHref.replace(/"/g,'&quot;')}" class="btn btn-sm btn-ghost btn-header-contact">${contactLabel.replace(/</g,'&lt;')}</a>`;
       }
     }
     if(!navIds.length){
@@ -195,20 +318,130 @@ function applySections(c){
     }
     navContainer.innerHTML = html;
     if(mobileMenu){
-      let mHtml='';
+      let mHtml=`<a href="index.html"${navActiveAttr(true, false)}>Home</a>`;
       navIds.forEach(id=>{
         const sec = sections.find(s=>s.id===id);
-        const label = (sec?.title) || labelMap[id] || id;
-        const href = (sec?.href && sec.href.trim()) ? sec.href.trim() : `#${id}`;
+        const label = id==='work' ? 'Work' : ((sec?.title) || labelMap[id] || id);
+        const href = navHrefFor(sec?.href, id);
         const isExternal = /^https?:\/\//.test(href) || href.startsWith('mailto:');
         const target = isExternal ? ' target="_blank" rel="noopener"' : '';
         // mobile keeps simple <a> without button style
-        mHtml += `<a href="${href.replace(/"/g,'&quot;')}"${target}>${label.replace(/</g,'&lt;')}</a>`;
+        mHtml += `<a href="${href.replace(/"/g,'&quot;')}"${navActiveAttr(false, id==='work')}${target}>${label.replace(/</g,'&lt;')}</a>`;
       });
       // Mobile always includes contact if not in navIds but sections has contact visible? For consistency, use navIds check
       if(mHtml) mobileMenu.innerHTML = mHtml;
     }
   }
+}
+
+// ============================================================
+// CENTRAL VISIBILITY CONTRACT (Phase 2 — pure refactor, zero behavior change)
+// ------------------------------------------------------------
+// Canonical semantics, defined ONCE here. All renderers consume the
+// getters below; no renderer may re-invent these predicates inline.
+//
+// LAYERS (evaluated in this order):
+//   1. BASE GATE — `visible === false` means "unavailable to public
+//      rendering". Nothing bypasses it: home pick, work pick, services
+//      pick, stats/links picks and section reads all start here.
+//   2. PAGE PLACEMENT — `homeEnabled` / `workEnabled` decide whether a
+//      base-visible project is placed on that page. Flat form
+//      (`p.homeEnabled`) and concurrent-actor nested form
+//      (`p.home.enabled`, `p.home.order`) are BOTH honored; either form
+//      set to `false` excludes the item from home placement.
+//   3. SUB-ELEMENT SWITCHES — `display.*` (e.g. `display.title`,
+//      `display.thumbnail`, `display.cta`) toggle pieces INSIDE an
+//      already-selected item. They never re-admit a base-hidden item.
+//   4. NAV — section `showInNav` + section `visible` drive nav links.
+//      `showInNav` absent defaults to true except `hero`/`showreel`.
+//   5. DROPDOWN ONLY — `selectable === false` hides a (visible) service
+//      from the contact dropdown. It never affects service rendering.
+//
+// CANONICAL ABSENT-VALUE DEFAULTS:
+//   visible absent = true (shown)        → test is `!== false`
+//   display.* absent = shown             → test is `!== false`
+//   home/work placement absent = true    → test is `!== false`
+//   order absent = 0                     → `(homeOrder ?? home.order ?? order ?? 0)`
+//
+// PHASE DISCIPLINE: this layer only SELECTS. Converting a `display:none`
+// hide into skip-render is Phase 4 work — not done here. No new flags.
+// ============================================================
+function isVisible(item){
+  return !!item && item.visible !== false;
+}
+// Generic base-gate filter: preserves order, never mutates, [] for non-array.
+function getVisibleItems(list){
+  return (Array.isArray(list) ? list : []).filter(isVisible);
+}
+// Base gate ONLY (no placement/sort/cap). Defaults to live CONTENT when
+// no list is passed. Absent `visible` normalizes to true via isVisible.
+function getVisibleProjects(projects){
+  const list = (projects === undefined) ? ((typeof CONTENT !== 'undefined' && CONTENT) ? CONTENT.projects : []) : projects;
+  return getVisibleItems(list);
+}
+// Base gate ONLY for sections. Absent `visible` normalizes to true.
+function getVisibleSections(sections){
+  const list = (sections === undefined) ? ((typeof CONTENT !== 'undefined' && CONTENT) ? CONTENT.sections : []) : sections;
+  return getVisibleItems(list);
+}
+// Base gate ONLY for services. Absent `visible` normalizes to true.
+// NOTE: `selectable` is intentionally NOT applied here — it drives the
+// contact dropdown only (call sites filter `.selectable !== false` after).
+function getVisibleServices(services){
+  const list = (services === undefined) ? ((typeof CONTENT !== 'undefined' && CONTENT) ? CONTENT.services : []) : services;
+  return getVisibleItems(list);
+}
+// TODO (Phase 2): getEnabledPages()/getEnabledLinks() SKIPPED — they cannot
+// be built from existing config without inventing new schema. Nav derives
+// from sections[] (`showInNav` + `visible`), and footer/contact links are
+// independent per-object arrays (`c.footer.links`, `c.contact.links`) with
+// no shared link-registry or pages array in config.js. Revisit if a pages
+// schema is ever introduced.
+// OFF = never enters DOM/media: start from visible !== false, keep
+// homeEnabled !== false (absent means true = today's behavior), split by
+// format, sort each by (homeOrder ?? order ?? 0), cap by home limits.
+// renderGrid() only builds the passed-in lists, so non-selected projects
+// cause zero home work (no card DOM, no thumbnail request, no listeners).
+// Work page (workVisibleProjects/renderWorkPage) intentionally untouched.
+// HOME CAP PRECEDENCE (owner decision — CONFIG DRIVES):
+//   1. CONFIG when present: CONTENT.home.longFormLimit / shortFormLimit
+//      (finite > 0) set the intended caps.
+//   2. DEFAULTS when absent/invalid: long=6 / short=4 (owner statement).
+//   3. HARD SAFETY CEILING 6 each: a config asking for more is clamped to 6,
+//      so rendering can never exceed 6+6 even if config says higher — and it
+//      can never exceed config intent downward (config 4 => max 4, not 6).
+// Short-form default is 4: do NOT silently keep over-rendering 6 when config
+// says 4 or is absent.
+const HOME_DEFAULT_LONG = 6;
+const HOME_DEFAULT_SHORT = 4;
+const HOME_HARD_CEILING = 6;
+function homeLimits(){
+  const h = (typeof CONTENT !== 'undefined' && CONTENT && typeof CONTENT.home === 'object' && CONTENT.home) || {};
+  const L = parseInt(h.longFormLimit, 10), S = parseInt(h.shortFormLimit, 10);
+  const wantLong = (Number.isFinite(L) && L > 0) ? L : HOME_DEFAULT_LONG;
+  const wantShort = (Number.isFinite(S) && S > 0) ? S : HOME_DEFAULT_SHORT;
+  return {long: Math.min(wantLong, HOME_HARD_CEILING),
+          short: Math.min(wantShort, HOME_HARD_CEILING)};
+}
+function selectHomeProjects(projects){
+  // Filter-first: base gate via getVisibleProjects(), then homeEnabled !== false (absent = true).
+  // Also honors concurrent-actor nested p.home.enabled when present.
+  const list = getVisibleProjects(projects || []).filter(p => p.homeEnabled !== false && !(p.home && typeof p.home === 'object' && p.home.enabled === false));
+  // Sort key: flat homeOrder ?? nested home.order ?? order ?? 0 (absent falls back to order).
+  const homeKey = (p) => {
+    if (typeof p.homeOrder === 'number' && isFinite(p.homeOrder)) return p.homeOrder;
+    const nested = p.home && typeof p.home === 'object' ? p.home.order : undefined;
+    const n = typeof nested === 'number' ? nested : parseInt(nested, 10);
+    if (Number.isFinite(n)) return n;
+    if (typeof p.order === 'number' && isFinite(p.order)) return p.order;
+    const o = parseInt(p.order, 10);
+    return Number.isFinite(o) ? o : 0;
+  };
+  const byHomeOrder = (a, b) => (homeKey(a) - homeKey(b));
+  const lim = (typeof homeLimits === 'function') ? homeLimits() : {long: HOME_DEFAULT_LONG, short: HOME_DEFAULT_SHORT};
+  const homeLong = list.filter(p => (p.format || 'long') === 'long').sort(byHomeOrder).slice(0, lim.long);
+  const homeShort = list.filter(p => p.format === 'short').sort(byHomeOrder).slice(0, lim.short);
+  return { homeLong, homeShort };
 }
 
 function renderSite(){
@@ -261,11 +494,21 @@ function renderSite(){
     const heroTaglineEl = document.getElementById('heroTagline');
     if(heroTaglineEl){
       heroTaglineEl.textContent = heroEyebrow;
-      heroTaglineEl.style.display = heroDisp.eyebrow===false ? 'none' : '';
+      if(heroDisp.eyebrow===false){
+        heroTaglineEl.style.display='none';
+        heroTaglineEl.setAttribute('hidden','');
+        heroTaglineEl.setAttribute('aria-hidden','true');
+      } else {
+        heroTaglineEl.style.display='';
+        heroTaglineEl.removeAttribute('hidden');
+        heroTaglineEl.removeAttribute('aria-hidden');
+      }
+      // P2.4 section-label case (presentation only, stored value untouched — default natural)
+      try{ heroTaglineEl.style.textTransform = textCaseToTransform(resolveTextCase(c.hero?.eyebrowCase, globalTextCase(), 'normal')); }catch(e){}
     }
     const heroTitleEl = document.getElementById('heroTitle');
     if(heroTitleEl){
-      heroTitleEl.innerHTML = `${c.hero?.title || ""}<br><span>${c.hero?.titleAccent || ""}</span>`;
+      heroTitleEl.innerHTML = `${c.hero?.title || ""}<br><span id="heroTitleAccent">${c.hero?.titleAccent || ""}</span>`;
       heroTitleEl.style.display = heroDisp.title===false ? 'none' : '';
     }
     const heroDescEl = document.getElementById('heroDesc');
@@ -273,23 +516,89 @@ function renderSite(){
       heroDescEl.textContent = c.hero?.description || "";
       heroDescEl.style.display = heroDisp.description===false ? 'none' : '';
     }
-    // CTA buttons — data-driven + granular
+    // Hero vertical offsets (editor position controls): px translate per
+    // text element, 0/absent/invalid = current position. transform keeps
+    // document flow and responsive behavior untouched.
+    const heroOffset = (c.hero && c.hero.offset) || {};
+    const heroNum = (raw)=>{
+      let v = Number(raw);
+      if(!isFinite(v)) v = 0;
+      return Math.max(-80, Math.min(80, Math.round(v)));
+    };
+    // Relative offset: shifts the element visually without moving document
+    // flow (siblings/layout untouched, wrapping intact). Works on inline
+    // content too, where transforms would not apply. Cleared at 0.
+    const heroShift = (el, v)=>{
+      if(!el) return;
+      el.style.position = v ? 'relative' : '';
+      el.style.top = v ? `${v}px` : '';
+    };
+    heroShift(document.getElementById('heroTagline'), heroNum(heroOffset.eyebrow));
+    heroShift(document.getElementById('heroDesc'), heroNum(heroOffset.description));
+    // Title moves its own block; highlight (inline span, moves with its
+    // parent) gets the compensated delta so each is visually independent.
+    const tt = heroNum(heroOffset.title), hh = heroNum(heroOffset.highlight);
+    heroShift(heroTitleEl, tt);
+    heroShift(document.getElementById('heroTitleAccent'),
+      Math.max(-80, Math.min(80, hh - tt)));
+    // CTA buttons — data-driven + granular + dead-destination gate (P1).
+    // A CTA pointing at a disabled destination never binds/renders as live:
+    // work targets (work.html / #work) require work section visible; contact
+    // targets (#contact / index.html#contact) require contact section visible.
+    // Gate evaluated here (authoritative impl, in place) before href/display.
+    const sectionVisibleById = (id)=>{
+      try{
+        const list = (c.sections && Array.isArray(c.sections)) ? c.sections : [];
+        const sec = list.find(s=>s.id===id);
+        if(!sec) return true; // missing flags keep existing defaults (present)
+        return isVisible(sec);
+      }catch(e){ return true; }
+    };
+    const ctaTargetOff = (href)=>{
+      const h = (href||"").trim().toLowerCase();
+      if(!h) return false;
+      if(h.includes('#contact') || h==='contact') return !sectionVisibleById('contact');
+      if(h.includes('work.html') || h==='#work' || h.endsWith('#work')) return !sectionVisibleById('work');
+      return false;
+    };
     const ctaPrimary = c.hero?.ctaPrimary || {text:"View My Work →", href:"#work", visible:true};
     const ctaSecondary = c.hero?.ctaSecondary || {text:"Let's Talk", href:"#contact", visible:true};
     const ctaContainer = document.querySelector('.hero-cta');
     if(ctaContainer){
       const btns = ctaContainer.querySelectorAll('a.btn');
+      const pOff = ctaTargetOff(ctaPrimary.href || "#work");
+      const sOff = ctaTargetOff(ctaSecondary.href || "#contact");
       if(btns[0]){
         btns[0].textContent = ctaPrimary.text || "View My Work →";
-        btns[0].setAttribute('href', ctaPrimary.href || "#work");
-        btns[0].style.display = (ctaPrimary.visible===false || heroDisp.cta===false) ? 'none' : '';
+        if(pOff){
+          btns[0].removeAttribute('href');
+          btns[0].style.display='none';
+          btns[0].setAttribute('aria-hidden','true');
+          btns[0].tabIndex = -1;
+        } else {
+          btns[0].setAttribute('href', ctaPrimary.href || "#work");
+          btns[0].style.display = (ctaPrimary.visible===false || heroDisp.cta===false) ? 'none' : '';
+          btns[0].removeAttribute('aria-hidden');
+          btns[0].tabIndex = 0;
+        }
       }
       if(btns[1]){
         btns[1].textContent = ctaSecondary.text || "Let's Talk";
-        btns[1].setAttribute('href', ctaSecondary.href || "#contact");
-        btns[1].style.display = (ctaSecondary.visible===false || heroDisp.cta===false) ? 'none' : '';
+        if(sOff){
+          btns[1].removeAttribute('href');
+          btns[1].style.display='none';
+          btns[1].setAttribute('aria-hidden','true');
+          btns[1].tabIndex = -1;
+        } else {
+          btns[1].setAttribute('href', ctaSecondary.href || "#contact");
+          btns[1].style.display = (ctaSecondary.visible===false || heroDisp.cta===false) ? 'none' : '';
+          btns[1].removeAttribute('aria-hidden');
+          btns[1].tabIndex = 0;
+        }
       }
-      if((ctaPrimary.visible===false || heroDisp.cta===false) && (ctaSecondary.visible===false || heroDisp.cta===false)){
+      const pHidden = (ctaPrimary.visible===false || heroDisp.cta===false || pOff);
+      const sHidden = (ctaSecondary.visible===false || heroDisp.cta===false || sOff);
+      if(pHidden && sHidden){
         ctaContainer.style.display='none';
       } else {
         ctaContainer.style.display = heroDisp.cta===false ? 'none' : '';
@@ -308,16 +617,20 @@ function renderSite(){
     // Media granular — hide if hero display.media false OR showreel hidden (content or section)
     const heroMediaDisp = heroDisp.media !== false;
     const sectionShowreel = c.sections?.find(s=>s.id==='showreel');
-    const sectionShowreelVisible = sectionShowreel ? sectionShowreel.visible !== false : true;
+    const sectionShowreelVisible = sectionShowreel ? isVisible(sectionShowreel) : true;
     const showreelVisible = c.showreel?.visible !== false && sectionShowreelVisible;
     const heroMediaEl = document.querySelector('.hero-media');
     if(heroMediaEl){
       if(!heroMediaDisp || !showreelVisible){
         heroMediaEl.style.display='none';
+        heroMediaEl.setAttribute('hidden','');
+        heroMediaEl.setAttribute('aria-hidden','true');
         const heroEl = document.querySelector('.hero');
         if(heroEl) heroEl.style.gridTemplateColumns='1fr';
       } else {
         heroMediaEl.style.display='';
+        heroMediaEl.removeAttribute('hidden');
+        heroMediaEl.removeAttribute('aria-hidden');
         const heroEl = document.querySelector('.hero');
         if(heroEl) heroEl.style.gridTemplateColumns='';
       }
@@ -325,14 +638,24 @@ function renderSite(){
   }
   const thumb = c.showreel?.thumbnail || "";
   const thumbAlt = c.showreel?.thumbnailAlt || c.showreel?.title || "Showreel";
+  // Media discipline (home path): don't fetch hero/showreel thumb while hidden.
+  // Section show/hide mechanics above are untouched; this only skips the src
+  // assignment (zero thumbnail request) when the image could never be seen.
+  const _heroHidden = c.hero?.visible === false;
+  const _secSr = c.sections?.find(s=>s.id==='showreel');
+  const _srHidden = c.showreel?.visible === false || (_secSr && !isVisible(_secSr));
+  const _mediaOff = (c.hero?.display?.media === false);
+  const _skipHeroThumb = _heroHidden || _srHidden || _mediaOff;
   if(thumb) {
     const heroImg = document.getElementById('heroThumb');
-    heroImg.src = thumb;
-    heroImg.alt = thumbAlt;
-    heroImg.onerror = function(){ this.onerror=null; this.src = PLACEHOLDER_SVG; };
+    if(heroImg && !_skipHeroThumb){
+      heroImg.src = thumb;
+      heroImg.alt = thumbAlt;
+      heroImg.onerror = function(){ this.onerror=null; this.src = PLACEHOLDER_SVG; };
+    }
   } else {
     const heroImg = document.getElementById('heroThumb');
-    if(heroImg && c.showreel?.visible!==false){
+    if(heroImg && !_skipHeroThumb && c.showreel?.visible!==false){
       // use YouTube poster if no custom thumb
       const yid = c.showreel?.youtubeId || youtubeIdFromUrl(c.showreel?.youtubeUrl||"");
       if(yid) heroImg.src = `https://img.youtube.com/vi/${yid}/hqdefault.jpg`;
@@ -360,8 +683,15 @@ function renderSite(){
   const stats = c.hero?.stats || [];
   const statsEl = document.getElementById('stats');
   if(statsEl){
+    // Media discipline (home path): skip stats HTML work while hero hidden.
+    // Show/hide mechanics untouched; only avoids innerHTML churn when unseen.
+    const _heroHiddenForStats = c.hero?.visible === false;
+    if(_heroHiddenForStats){
+      statsEl.innerHTML='';
+      statsEl.style.display='none';
+    } else {
     const groupVisible = heroDisp2.stats !== false;
-    const visibleStats = stats.filter(s=> s.visible!==false && s.display!==false);
+    const visibleStats = getVisibleItems(stats).filter(s=> s.display!==false);
     if(groupVisible && visibleStats.length){
       statsEl.innerHTML = visibleStats.map(s=>{
         // handle both old {value,label} and new {text,value}
@@ -378,6 +708,7 @@ function renderSite(){
     } else {
       statsEl.innerHTML='';
       statsEl.style.display='none';
+    }
     }
   }
   // Work / Selected Work — complete control
@@ -428,6 +759,8 @@ function renderSite(){
   if(aboutEyebrowEl){
     aboutEyebrowEl.textContent = c.about?.eyebrow || "ABOUT ME";
     aboutEyebrowEl.style.display = aboutDisp.eyebrow===false ? 'none' : '';
+    // P2.4 section-label case (presentation only, stored value untouched — default natural)
+    try{ aboutEyebrowEl.style.textTransform = textCaseToTransform(resolveTextCase(c.about?.eyebrowCase, globalTextCase(), 'normal')); }catch(e){}
   }
   const aboutSection = document.getElementById('about');
   if(c.about && c.about.visible === false){
@@ -436,18 +769,27 @@ function renderSite(){
     if(aboutSection) aboutSection.style.display='';
     const aboutImg = document.getElementById('aboutImg');
     if(aboutImg){
-      const imgSrc = c.about?.image || "";
-      aboutImg.src = imgSrc || PLACEHOLDER_SVG;
-      aboutImg.alt = c.about?.imageAlt || c.about?.title || "About photo";
-      aboutImg.onerror = function(){ this.onerror=null; this.src = PLACEHOLDER_SVG; };
       const aboutImgWrap = document.querySelector('.about-img');
-      if(aboutImgWrap){
-        aboutImgWrap.style.display = aboutDisp.image===false ? 'none' : '';
-        if(aboutDisp.image===false) aboutImgWrap.style.display='none';
-        else aboutImgWrap.style.display='';
+      // Filter-first: no src fetch while display.image OFF (gate passes before
+      // any network). Hidden wrap follows the hero hidden/aria-hidden pattern.
+      if(aboutDisp.image===false){
+        try{ aboutImg.removeAttribute('src'); }catch(e){}
+        aboutImg.setAttribute('aria-hidden','true');
+        if(aboutImgWrap){
+          aboutImgWrap.style.display='none';
+          aboutImgWrap.setAttribute('aria-hidden','true');
+        }
+      } else {
+        const imgSrc = c.about?.image || "";
+        aboutImg.src = imgSrc || PLACEHOLDER_SVG;
+        aboutImg.alt = c.about?.imageAlt || c.about?.title || "About photo";
+        aboutImg.onerror = function(){ this.onerror=null; this.src = PLACEHOLDER_SVG; };
+        aboutImg.removeAttribute('aria-hidden');
+        if(aboutImgWrap){
+          aboutImgWrap.style.display='';
+          aboutImgWrap.removeAttribute('aria-hidden');
+        }
       }
-      // hide image if display false
-      if(aboutDisp.image===false && aboutImgWrap) aboutImgWrap.style.display='none';
     }
     const aboutTitleEl = document.getElementById('aboutTitle');
     if(aboutTitleEl){
@@ -464,7 +806,7 @@ function renderSite(){
       const ptsRaw = c.about?.points || [];
       const pts = ptsRaw.filter(p=>{
         if(typeof p==='string') return true;
-        return p.visible!==false;
+        return isVisible(p);
       }).map(p=> typeof p==='string' ? p : (p.text||p.value||''));
       const groupVisible = aboutDisp.highlights!==false;
       aboutListEl.innerHTML = pts.map(p=>`<li>✓ ${p.replace(/</g,'&lt;')}</li>`).join('');
@@ -475,7 +817,7 @@ function renderSite(){
       const toolsRaw = c.about?.tools || [];
       const tools = toolsRaw.filter(t=>{
         if(typeof t==='string') return true;
-        return t.visible!==false;
+        return isVisible(t);
       }).map(t=> typeof t==='string' ? t : (t.text||t.value||''));
       const groupVisible = aboutDisp.tools!==false;
       aboutToolsEl.innerHTML = tools.map(t=>`<span>${t.replace(/</g,'&lt;')}</span>`).join('');
@@ -487,19 +829,24 @@ function renderSite(){
   const servicesSec = (c.sections||[]).find(s=>s.id==='services');
   const servicesTitleEl = document.getElementById('servicesTitle');
   if(servicesTitleEl && servicesSec?.title) servicesTitleEl.textContent = servicesSec.title;
-  const visibleServices = (c.services || []).filter(s => s.visible !== false);
+  const visibleServices = getVisibleServices(c.services);
   const servicesGrid = document.getElementById('servicesGrid');
   const servicesSection = document.getElementById('services');
   if(servicesGrid){
+    // Dead-destination gate: a service CTA resolving to #contact while the
+    // contact section is OFF is dropped before DOM creation (no dead CTA).
+    const contactOff = (()=>{ try{ const l=((c.sections||[]).find(s=>s.id==='contact')); return l ? !isVisible(l) : false; }catch(e){ return false; } })();
     if(visibleServices.length){
       servicesGrid.innerHTML = visibleServices.map(s=>{
         const d = s.display || {};
-        const icon = d.icon===false ? '' : `<div class="icon">${(s.icon||"🎬").replace(/</g,'&lt;')}</div>`;
+        const icon = d.icon===false ? '' : `<div class="icon">${serviceIconSvg(s.icon, s.title)}</div>`;
         const title = d.title===false ? '' : `<h3>${(s.title||'').replace(/</g,'&lt;')}</h3>`;
         const desc = d.description===false ? '' : `<p>${(s.description||'').replace(/</g,'&lt;')}</p>`;
         const price = d.price===false ? '' : (s.price ? `<span class="price">${s.price.replace(/</g,'&lt;')}</span>` : '');
         const showCTA = d.cta!==false && s.ctaText && s.ctaText.trim();
-        const cta = !showCTA ? '' : `<a href="${(s.ctaHref||"#contact").replace(/"/g,'&quot;')}" ${s.ctaNewTab ? 'target="_blank" rel="noopener"' : ''} class="btn btn-sm" style="margin-top:10px;">${s.ctaText.replace(/</g,'&lt;')}</a>`;
+        const rawHref = (s.ctaHref||"#contact");
+        const deadContact = contactOff && (rawHref.trim().toLowerCase().includes('#contact') || rawHref.trim()==='#contact');
+        const cta = (!showCTA || deadContact) ? '' : `<a href="${rawHref.replace(/"/g,'&quot;')}" ${s.ctaNewTab ? 'target="_blank" rel="noopener"' : ''} class="btn btn-sm" style="margin-top:10px;">${s.ctaText.replace(/</g,'&lt;')}</a>`;
         return `<div class="service-card">${icon}${title}${desc}${price}${cta}</div>`;
       }).join('');
       if(servicesSection) servicesSection.style.display='';
@@ -533,7 +880,7 @@ function renderSite(){
   if(serviceSelect){
     const currentVal = serviceSelect.value;
     const placeholder = formCfgForDropdown.servicePlaceholder || "Select Service";
-    serviceSelect.innerHTML = `<option value="">${placeholder.replace(/</g,'&lt;')}</option>`;
+    serviceSelect.innerHTML = `<option value="" disabled selected>${placeholder.replace(/</g,'&lt;')}</option>`;
     // Only show services where visible && selectable !== false — hidden services never appear
     const selectableServices = visibleServices.filter(s=> s.selectable!==false);
     selectableServices.forEach(s=>{
@@ -561,10 +908,10 @@ function renderSite(){
     let html = '';
     const email = (c.contact?.email || "").trim();
     if(email && contactDisp.email!==false){
-      html += `<a href="mailto:${email}">${email}</a>`;
+      html += `<a href="mailto:${email.replace(/"/g,'&quot;')}">${email.replace(/</g,'&lt;')}</a>`;
     }
     const links = c.contact?.links || [];
-    const visibleLinks = links.filter(l => l.visible !== false && (l.url||"").trim());
+    const visibleLinks = getVisibleItems(links).filter(l => (l.url||"").trim());
     if(contactDisp.links!==false && visibleLinks.length){
       visibleLinks.forEach(l=>{
         const label = (l.label || "Link").replace(/</g,'&lt;');
@@ -647,8 +994,8 @@ function renderSite(){
       // Handle Other option and empty state
       const serviceSelect = fieldMap.service;
       if(serviceSelect && formDisp2.service!==false){
-        // Check if no selectable services
-        const selectable = (c.services||[]).filter(s=> s.visible!==false && s.selectable!==false);
+        // Check if no selectable services (base gate via getter, dropdown-only selectable inline)
+        const selectable = getVisibleServices(c.services).filter(s=> s.selectable!==false);
         if(selectable.length===0 && !formCfg.includeOther){
           // No services available — hide service field
           const svcContainer = serviceSelect.closest('div') || serviceSelect.parentElement;
@@ -676,7 +1023,13 @@ function renderSite(){
     }
     const serviceSelect2 = contactForm.querySelector('select[name="service"]');
     if(serviceSelect2){
-      if(formCfg.servicePlaceholder) serviceSelect2.options[0].textContent = formCfg.servicePlaceholder;
+      if(formCfg.servicePlaceholder && serviceSelect2.options.length) serviceSelect2.options[0].textContent = formCfg.servicePlaceholder;
+      if(serviceSelect2.options.length){
+        serviceSelect2.options[0].value = "";
+        serviceSelect2.options[0].disabled = true;
+        if(!serviceSelect2.value) serviceSelect2.options[0].selected = true;
+      }
+      if(formCfg.serviceLabel) serviceSelect2.setAttribute("aria-label", formCfg.serviceLabel);
       serviceSelect2.required = !!formCfg.serviceRequired;
       // Other option is handled in dropdown generation above, but ensure placeholder is correct
     }
@@ -691,6 +1044,7 @@ function renderSite(){
       if(formCfg.submitText) submitBtn.textContent = formCfg.submitText;
       submitBtn.style.display = (formCfg.display && formCfg.display.submit===false) ? 'none' : '';
     }
+    try{ ensureContactLabels(contactForm); }catch(e){}
   }
   // Footer — granular
   const footerEl = document.querySelector('.footer');
@@ -706,7 +1060,7 @@ function renderSite(){
       else footerTextEl.textContent = `© 2026 ${c.profile?.name||"Sahil"}.`;
       footerTextEl.style.display = footerDisp.copyright===false ? 'none' : '';
     }
-    const backToTopEl = document.querySelector('.footer-inner a[href="#"]');
+    const backToTopEl = document.querySelector('.footer-inner a[href="#hero"], .footer-inner a[href="#top"], .footer-inner a[href="#"]');
     if(backToTopEl){
       if(c.footer?.backToTopText) backToTopEl.textContent = c.footer.backToTopText;
       backToTopEl.style.display = footerDisp.backToTop===false ? 'none' : '';
@@ -717,7 +1071,7 @@ function renderSite(){
     const footerSocial = document.querySelector('.footer .social-links');
     if(footerSocial) footerSocial.style.display = footerDisp.social===false ? 'none' : '';
     // footer additional links — universal link system
-    const footerLinksData = (c.footer?.links || []).filter(l=> l.visible!==false && (l.url||"").trim());
+    const footerLinksData = getVisibleItems(c.footer?.links).filter(l=> (l.url||"").trim());
     let footerLinksEl = document.getElementById('footerLinks');
     if(!footerLinksEl && footerLinksData.length){
       footerLinksEl = document.createElement('div');
@@ -745,47 +1099,38 @@ function renderSite(){
     }
   }
 
-  const allProjects = (c.projects || []).filter(p => p.visible !== false);
-  const longProjects = allProjects.filter(p => (p.format||'long') === 'long');
-  const shortProjects = allProjects.filter(p => p.format === 'short');
+  // Filter-first home pipeline: OFF = never enters DOM/media. selectHomeProjects
+  // starts from visible, keeps homeEnabled !== false, sorts by
+  // (homeOrder ?? order ?? 0), caps by home limits (CONFIG drives per
+  // HOME CAP PRECEDENCE: config when present, defaults 6/4, ceiling 6 each).
+  // renderGrid() below only builds these selected
+  // lists, so excluded items cause zero home work.
+  // Work page path (workVisibleProjects/renderWorkPage) keeps all visible.
+  const { homeLong: longProjects, homeShort: shortProjects } = selectHomeProjects(c.projects || []);
+  // "View All Work →" (static, genuinely optional): hide with hidden/
+  // aria-hidden (hero pattern, no CSS override block) while the work section
+  // is OFF so it never reads as a dead CTA to a disabled destination.
+  try{
+    const workOff = (()=>{ const s=(c.sections||[]).find(x=>x.id==='work'); return s ? !isVisible(s) : false; })();
+    const viewAll = document.getElementById('viewAllWork') || document.querySelector('#work a.btn[href="work.html"]');
+    if(viewAll){
+      const wrap = viewAll.closest('div') || viewAll;
+      if(workOff){
+        viewAll.setAttribute('aria-hidden','true');
+        viewAll.tabIndex = -1;
+        if(wrap){ wrap.setAttribute('hidden',''); wrap.setAttribute('aria-hidden','true'); wrap.style.display='none'; }
+        else viewAll.style.display='none';
+      } else {
+        viewAll.removeAttribute('aria-hidden');
+        viewAll.tabIndex = 0;
+        if(wrap){ wrap.removeAttribute('hidden'); wrap.removeAttribute('aria-hidden'); wrap.style.display=''; }
+        else viewAll.style.display='';
+      }
+    }
+  }catch(e){}
 
   const gridLong = document.getElementById('projectGridLong');
   const gridShort = document.getElementById('projectGridShort');
-
-  function renderGrid(projects, gridEl){
-    if(!projects.length){
-      gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#a1a1aa">No videos in this category yet.</div>`;
-      return;
-    }
-    gridEl.innerHTML = projects.map(p=>{
-      const yid = p.youtubeId || youtubeIdFromUrl(p.youtubeUrl);
-      const isVideo = yid && yid.length===11;
-      const d = p.display || {};
-      const customThumb = (p.thumbnail||"").trim();
-      const showThumb = d.thumbnail!==false;
-      const primaryThumb = showThumb ? (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : PLACEHOLDER_SVG)) : PLACEHOLDER_SVG;
-      const badge = d.category===false ? '' : `<span class="badge">${(p.category || (p.format==='short' ? "Reels" : "Video")).replace(/</g,'&lt;')}</span>`;
-      const play = (d.playButton===false || !isVideo) ? '' : `<span class="play-badge">▶</span>`;
-      const youtubeUrl = p.youtubeUrl || (yid ? `https://www.youtube.com/watch?v=${yid}` : "");
-      const format = p.format || 'long';
-      const safeThumb = (customThumb || (isVideo ? getYouTubeThumb(yid, "hq") : "")).replace(/"/g,'&quot;');
-      const alt = (p.thumbnailAlt || p.title || "").replace(/"/g,'&quot;');
-      const desc = (p.description||"").replace(/"/g,'&quot;');
-      const fit = p.thumbnailFit || 'cover';
-      const title = d.title===false ? '' : `<h3>${(p.title||"Untitled").replace(/</g,'&lt;')}</h3>`;
-      const meta = d.meta===false ? '' : `<p>${(p.meta||"").replace(/</g,'&lt;')}</p>`;
-      const descHtml = (d.description===false || !desc) ? '' : `<p style="font-size:11px;color:#71717a;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px">${desc.replace(/</g,'&lt;')}</p>`;
-      return `
-      <article class="card" data-youtube-url="${youtubeUrl}" data-youtube-id="${yid||""}" data-format="${format}" data-title="${(p.title||"").replace(/"/g,'&quot;')}" data-thumb="${safeThumb}" data-desc="${desc}" data-thumb-alt="${alt}" tabindex="0">
-        <div class="card-media" style="${showThumb ? '' : 'display:none'}">
-          <img src="${primaryThumb}" data-custom="${customThumb}" data-yid="${yid||""}" alt="${alt}" loading="lazy" onerror="handleThumbError(this)" style="object-fit:${fit};${showThumb ? '' : 'display:none'}">
-          ${badge}
-          ${play}
-        </div>
-        <div class="card-body">${title}${meta}${descHtml}</div>
-      </article>`;
-    }).join('');
-  }
 
   // Handle empty states and tabs hidden: if both tabs hidden, show all projects in long grid without tabs
   const workSettings = workSec?.settings || {};
@@ -802,6 +1147,13 @@ function renderSite(){
     renderGrid(longProjects, gridLong);
     renderGrid(shortProjects, gridShort);
   }
+  // Above-fold thumbs (render path only): first 2 home long-grid images load
+  // eager with high fetch priority; everything else keeps renderGrid's lazy.
+  // No URL/selection/order logic touched — attribute switch on position only.
+  try{
+    const _foldImgs = gridLong ? gridLong.querySelectorAll('img') : [];
+    _foldImgs.forEach((img, i)=>{ if(i < 2){ img.loading = 'eager'; img.setAttribute('fetchpriority', 'high'); } });
+  }catch(e){}
 
   setupTabs();
   bindCards(yidOverride());
@@ -815,9 +1167,10 @@ function renderSite(){
   if(initialTab==="short" && !shortVis) initialTab = longVis ? "long" : "short";
   // If tabs hidden, already handled, else set active
   if(tabsShouldShow){
-    document.querySelectorAll('.tab-btn').forEach(b=> {b.classList.remove('active'); b.setAttribute('aria-selected','false');});
+    document.querySelectorAll('.tab-btn').forEach(b=> {b.classList.remove('active'); b.setAttribute('aria-selected','false'); b.setAttribute('aria-pressed','false');});
     document.querySelector(`.tab-btn[data-tab="${initialTab}"]`)?.classList.add('active');
     document.querySelector(`.tab-btn[data-tab="${initialTab}"]`)?.setAttribute('aria-selected','true');
+    document.querySelector(`.tab-btn[data-tab="${initialTab}"]`)?.setAttribute('aria-pressed','true');
     gridLong.style.display = initialTab==="long" ? 'grid' : 'none';
     gridShort.style.display = initialTab==="short" ? 'grid' : 'none';
   } else {
@@ -828,13 +1181,42 @@ function renderSite(){
 }
 
 function setupTabs(){
-  const tabs = document.querySelectorAll('.tab-btn');
+  // Bind-after-gate (P1): OFF tabs (longVisible/shortVisible false) get no
+  // listeners and no keyboard presence. Base gate read from work settings;
+  // missing flags default to true per the central contract.
+  let longVis = true, shortVis = true;
+  try{
+    const ws = (((CONTENT||{}).sections||[]).find(s=>s.id==='work')||{}).settings || {};
+    longVis = ws.longVisible!==false;
+    shortVis = ws.shortVisible!==false;
+  }catch(e){}
+  const tabVisible = (btn)=>{
+    const t = btn && btn.dataset ? btn.dataset.tab : '';
+    if(t==='long') return longVis;
+    if(t==='short') return shortVis;
+    return true;
+  };
+  const tabs = Array.from(document.querySelectorAll('.tab-btn:not(.wtab)'));
   const longGrid = document.getElementById('projectGridLong');
   const shortGrid = document.getElementById('projectGridShort');
-  tabs.forEach(btn=>{
+  const liveTabs = [];
+  tabs.forEach((btn)=>{
+    if(!tabVisible(btn)){
+      btn.onclick = null;
+      btn.onkeydown = null;
+      btn.tabIndex = -1;
+      btn.setAttribute('aria-hidden','true');
+      return;
+    }
+    btn.tabIndex = 0;
+    btn.removeAttribute('aria-hidden');
+    liveTabs.push(btn);
+  });
+  liveTabs.forEach((btn)=>{
+    const idx = liveTabs.indexOf(btn);
     btn.onclick = ()=>{
-      tabs.forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false')});
-      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      liveTabs.forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false'); b.setAttribute('aria-pressed','false')});
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true'); btn.setAttribute('aria-pressed','true');
       const tab = btn.dataset.tab;
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if(activePreview) hidePreview(activePreview);
@@ -855,6 +1237,13 @@ function setupTabs(){
           requestAnimationFrame(()=>{ shortGrid.style.opacity='1'; });
         }
       }
+      try{ if(window.Telemetry) Telemetry.event('FILTER_CHANGE', { tab: tab }); }catch(e){}
+    };
+    btn.onkeydown = (e)=>{
+      if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
+      e.preventDefault();
+      const next = e.key==='ArrowRight' ? liveTabs[(idx+1)%liveTabs.length] : liveTabs[(idx-1+liveTabs.length)%liveTabs.length];
+      if(next){ next.focus(); next.click(); }
     };
   });
 }
@@ -864,11 +1253,351 @@ function yidOverride(){
   return c.showreel?.youtubeId || youtubeIdFromUrl(c.showreel?.youtubeUrl||"");
 }
 
+// Work page (work.html) — complete collection, same data/cards/player as
+// home. Runs instead of renderSite() when window.WORK_PAGE is set.
+//
+// PHASE 3 pipeline (no redesign, no schema change):
+//   CONFIG → getVisibleProjects() → long/shortVisible gate → classify →
+//   active filter → render only resulting cards → bind only rendered cards.
+// Work placement is visible-ONLY: homeEnabled/home.enabled NEVER control
+// Work (Home and Work stay independently controllable). Config order is
+// preserved exactly (no sort, no homeOrder).
+function workVisibleProjects(){
+  // BASE GATE only. Deliberately ignores homeEnabled / home.enabled /
+  // workEnabled: those drive Home placement, never Work placement.
+  return getVisibleProjects();
+}
+// Work format buckets: missing→long, long→long, short→short (verbatim).
+// Unknown formats have NO bucket in this two-section layout (no DOM section
+// exists for them) — see COUNT/RENDER RESOLUTION in renderWorkPage.
+function workFormatBucket(p){
+  const f = (p && p.format !== undefined && p.format !== null && p.format !== '') ? p.format : 'long';
+  if(f === 'long') return 'long';
+  if(f === 'short') return 'short';
+  return null;
+}
+function workFilterMatch(p, f){
+  const fmt = p.format || 'long';
+  const hay = ((p.category||'') + ' ' + (p.meta||'') + ' ' + (p.title||'')).toLowerCase();
+  const adRe = /(^|[\s·\/,;\-—])(ads?|advertisements?|promotional?|promos?|commercials?)([\s·\/,;\-—]|$)/;
+  if(f === 'long') return fmt === 'long';
+  if(f === 'short') return fmt === 'short';
+  if(f === 'ads') return adRe.test(hay);
+  if(f === 'other') return fmt !== 'long' && fmt !== 'short' && !adRe.test(hay);
+  return true; // all
+}
+function renderWorkPage(){
+  const c = CONTENT;
+  if(!c) return;
+  if(location.protocol === 'file:'){
+    const w = document.getElementById('fileWarn');
+    if(w) w.style.display = 'block';
+  }
+  const title = 'Work — ' + (c.site?.title || ((c.profile?.name || "Portfolio") + " — Portfolio"));
+  const pageTitleEl = document.getElementById('pageTitle');
+  if(pageTitleEl) pageTitleEl.textContent = title;
+  const logoEl = document.getElementById('logo');
+  if(logoEl) logoEl.innerHTML = (c.profile?.name || "SAHIL") + "<span>.</span>";
+  const gridLong = document.getElementById('workGridLong');
+  const gridShort = document.getElementById('workGridShort');
+  const secLong = document.getElementById('workSectionLong');
+  const secShort = document.getElementById('workSectionShort');
+  const emptyEl = document.getElementById('workEmpty');
+  const countEl = document.getElementById('workCount');
+  const emptyText = ((c.sections||[]).find(s=>s.id==='work')?.settings?.emptyText) || 'No videos in this category yet.';
+  // WORK PLACEMENT + LONG/SHORT-VISIBLE gates (Phase 3). Missing flags
+  // default to true (visible), matching today's behavior. Exclusion happens
+  // BEFORE renderGrid/card creation: disabled buckets never enter DOM, never
+  // request thumbnails, never get listeners (no display:none tricks on cards).
+  const workSettings = ((c.sections||[]).find(s=>s.id==='work') || {}).settings || {};
+  const longVisible = workSettings.longVisible !== false;
+  const shortVisible = workSettings.shortVisible !== false;
+  // Pill availability: hide the pill of a disabled bucket (All pill always
+  // stays). Tabs container hides only when BOTH buckets are off.
+  // Bind-after-gate (P1): OFF pills get no listeners/keyboard (inert).
+  const wtabVisible = (btn)=>{
+    const f = btn && btn.dataset ? btn.dataset.filter : 'all';
+    if(f === 'long') return longVisible;
+    if(f === 'short') return shortVisible;
+    return true;
+  };
+  try{
+    document.querySelectorAll('.wtab').forEach(btn=>{
+      const f = btn.dataset.filter;
+      if(f === 'long') btn.style.display = longVisible ? '' : 'none';
+      if(f === 'short') btn.style.display = shortVisible ? '' : 'none';
+      if(!wtabVisible(btn)){ btn.tabIndex = -1; btn.setAttribute('aria-hidden','true'); }
+      else { btn.tabIndex = 0; btn.removeAttribute('aria-hidden'); }
+    });
+    if(!longVisible && !shortVisible){
+      const tabsEl = document.querySelector('.work-tabs');
+      if(tabsEl) tabsEl.style.display = 'none';
+    }
+  }catch(e){}
+  // Pre-rendered grids (toggle-only filter switches, home setupTabs pattern):
+  // full gated longs/shorts are rendered ONCE below (config order preserved,
+  // no sort); all/long/short switches only toggle section display — no
+  // innerHTML destroy/recreate. Motion interplay: no DOM mutation means the
+  // MutationObserver path stays quiet; motion.js onFilterClick already covers
+  // non-mutated nodes (instantRevealCard for visible-grid cards + armAll
+  // after the fade), so already-revealed cards persist with .is-visible.
+  const gatedFull = workVisibleProjects().filter(p => {
+    const b = workFormatBucket(p);
+    if(b === 'long') return longVisible;
+    if(b === 'short') return shortVisible;
+    return false; // unknown format: no section exists → exclude from count+render
+  });
+  const fullLongs = gatedFull.filter(p => workFormatBucket(p) === 'long');
+  const fullShorts = gatedFull.filter(p => workFormatBucket(p) === 'short');
+  if(gridLong) renderGrid(fullLongs, gridLong);
+  if(gridShort) renderGrid(fullShorts, gridShort);
+  bindCards(yidOverride());
+  let _workFallbackActive = false;
+  function paintOne(sec, grid, items, show){
+    if(sec) sec.style.display = show ? '' : 'none';
+    if(grid) grid.style.display = '';
+    void items;
+    if(sec){
+      const head = sec.querySelector('.work-subhead');
+      // Subheads label the groups only in the mixed All view.
+      if(head) head.style.display = (show && currentFilter === 'all') ? '' : 'none';
+    }
+  }
+  let currentFilter = 'all';
+  function paint(filter){
+    currentFilter = filter;
+    // COUNT/RENDER RESOLUTION (Phase 3 exception, documented — not silent):
+    // pre-change code counted every base-visible item matching the filter in
+    // `list` (and in the project count) but only rendered `long`/`short`
+    // buckets, so an unknown-format item (e.g. format:"trailer") matching
+    // All/Ads/Other was COUNTED yet rendered NOWHERE. Resolution: items with
+    // no bucket (workFormatBucket() === null) are excluded from BOTH count
+    // and render consistently, AFTER the long/shortVisible gate and BEFORE
+    // the active filter. Invariant after gating: list.length ===
+    // longs.length + shorts.length, so the count always describes exactly
+    // what can render. Known formats are verbatim: missing→long,
+    // long→long, short→short. Order preserved (filters only, no sort).
+    const list = gatedFull.filter(p => workFilterMatch(p, filter));
+    const longs = list.filter(p => workFormatBucket(p) === 'long');
+    const shorts = list.filter(p => workFormatBucket(p) === 'short');
+    if(filter === 'all' || filter === 'long' || filter === 'short'){
+      // Toggle-only path (live pills): pre-rendered grids already hold
+      // exactly longs/shorts for these filters (long ⇒ all longs, short ⇒
+      // all shorts, all ⇒ both), so only section display changes. If a
+      // hidden ads/other fallback render ever dirtied the grids, restore
+      // the full grids once before toggling.
+      if(_workFallbackActive){
+        if(gridLong) renderGrid(fullLongs, gridLong);
+        if(gridShort) renderGrid(fullShorts, gridShort);
+        _workFallbackActive = false;
+      }
+      // Format sections show only when they hold items for this filter.
+      paintOne(secLong, gridLong, longs,
+        (filter === 'all' || filter === 'long') && longs.length > 0);
+      paintOne(secShort, gridShort, shorts,
+        (filter === 'all' || filter === 'short') && shorts.length > 0);
+    } else {
+      // Hidden-pill fallback (ads/other): exact render path, verbatim old
+      // behavior (render matching bucket, clear empty one), so output is
+      // identical even though these pills have no visible UI.
+      _workFallbackActive = true;
+      const showLong = (filter === 'ads' || filter === 'other') && longs.length > 0;
+      const showShort = (filter === 'ads' || filter === 'other') && shorts.length > 0;
+      if(secLong) secLong.style.display = showLong ? '' : 'none';
+      if(showLong && gridLong) renderGrid(longs, gridLong);
+      else if(gridLong) gridLong.innerHTML = '';
+      if(secLong){
+        const head = secLong.querySelector('.work-subhead');
+        if(head) head.style.display = 'none';
+      }
+      if(secShort) secShort.style.display = showShort ? '' : 'none';
+      if(showShort && gridShort) renderGrid(shorts, gridShort);
+      else if(gridShort) gridShort.innerHTML = '';
+      if(secShort){
+        const head = secShort.querySelector('.work-subhead');
+        if(head) head.style.display = 'none';
+      }
+    }
+    if(emptyEl){
+      if(!list.length){
+        emptyEl.textContent = emptyText;
+        emptyEl.style.display = '';
+      } else {
+        emptyEl.textContent = '';
+        emptyEl.style.display = 'none';
+      }
+    }
+    if(countEl) countEl.textContent = list.length === 1 ? '1 project' : list.length + ' projects';
+    bindCards(yidOverride());
+  }
+  const wtabsAll = Array.from(document.querySelectorAll('.wtab'));
+  const wtabs = wtabsAll.filter(wtabVisible);
+  wtabsAll.forEach((btn)=>{
+    if(!wtabVisible(btn)) return; // OFF pill: no listeners, no keyboard
+  });
+  wtabs.forEach((btn)=>{
+    const idx = wtabs.indexOf(btn);
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.wtab').forEach(b=>{ if(wtabVisible(b)){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); b.setAttribute('aria-pressed','false'); } });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      btn.setAttribute('aria-pressed','true');
+      paint(btn.dataset.filter || 'all');
+      try{ if(window.Telemetry) Telemetry.event('FILTER_CHANGE', { filter: (btn.dataset.filter || 'all') }); }catch(e){}
+    });
+    btn.addEventListener('keydown', (e)=>{
+      if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
+      e.preventDefault();
+      const next = e.key==='ArrowRight' ? wtabs[(idx+1)%wtabs.length] : wtabs[(idx-1+wtabs.length)%wtabs.length];
+      if(next){ next.focus(); next.click(); }
+    });
+  });
+  const footerCfg = c.footer || {};
+  const footerTextEl = document.getElementById('footerText');
+  if(footerTextEl){
+    footerTextEl.textContent = footerCfg.text || `© 2026 ${c.profile?.name||"Sahil"}.`;
+  }
+  // P2.4 natural: work subheads render normal (Long-form/Short-form stored text verbatim); presentation only, stored values untouched
+  try{
+    const workSec = (c.sections||[]).find(s=>s.id==='work');
+    const subCase = resolveTextCase(workSec?.settings?.subheadCase, globalTextCase(), 'normal');
+    document.querySelectorAll('.work-subhead').forEach(h=>{ h.style.textTransform = textCaseToTransform(subCase); });
+  }catch(e){}
+  // Dead-destination gate (P1, work page): "Let's Talk →" targets contact;
+  // hide with hidden/aria-hidden (hero pattern) while contact is OFF.
+  try{
+    const cSec = (c.sections||[]).find(s=>s.id==='contact');
+    const cOff = cSec ? !isVisible(cSec) : false;
+    const talk = document.querySelector('.work-cta a[href*="#contact"]');
+    if(talk){
+      const wrap = talk.closest('.work-cta') || talk;
+      if(cOff){
+        talk.setAttribute('aria-hidden','true'); talk.tabIndex = -1;
+        wrap.setAttribute('hidden',''); wrap.setAttribute('aria-hidden','true'); wrap.style.display='none';
+      } else {
+        talk.removeAttribute('aria-hidden'); talk.tabIndex = 0;
+        wrap.removeAttribute('hidden'); wrap.removeAttribute('aria-hidden'); wrap.style.display='';
+      }
+    }
+  }catch(e){}
+  paint('all');
+  // Above-fold thumbs (work path): mirror the home render path (first 2
+  // long-grid images eager + high fetch priority). renderGrid keeps every
+  // other image lazy/async, so below-fold stays lazy.
+  try{
+    const _wFold = gridLong ? gridLong.querySelectorAll('img') : [];
+    _wFold.forEach((img, i)=>{ if(i < 2){ img.loading = 'eager'; img.setAttribute('fetchpriority', 'high'); } });
+  }catch(e){}
+}
+
+// Startup quality preference — request highest available quality once per
+// open (1080p when offered, else the top reported level), then leave the
+// player alone so manual selection and YouTube adaptation keep working.
+// Pure enhancement: without the IFrame API (offline/blocked) playback is
+// exactly as before. Never loops, never re-forces.
+var _ytq = null; // {player, token, done}
+var _ytqSeq = 0;
+function _ytqPickBest(levels){
+  if(!levels || !levels.length) return null;
+  if(levels.indexOf('hd1080') !== -1) return 'hd1080';
+  return levels[0];
+}
+function _ytqEnsureApi(cb){
+  try{
+    if(window.YT && window.YT.Player){ cb(true); return; }
+    if(window._ytqApiLoading){ window._ytqApiQueue.push(cb); return; }
+    window._ytqApiLoading = true;
+    window._ytqApiQueue = [cb];
+    var prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function(){
+      try{ if(prev) prev(); }catch(_){}
+      var q = window._ytqApiQueue || [];
+      window._ytqApiQueue = [];
+      window._ytqApiLoading = false;
+      q.forEach(function(fn){ try{ fn(!!(window.YT && window.YT.Player)); }catch(_){} });
+    };
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    tag.onerror = function(){
+      var q = window._ytqApiQueue || [];
+      window._ytqApiQueue = [];
+      window._ytqApiLoading = false;
+      q.forEach(function(fn){ try{ fn(false); }catch(_){} });
+    };
+    document.head.appendChild(tag);
+    setTimeout(function(){
+      if(window._ytqApiLoading && !(window.YT && window.YT.Player)){
+        var q = window._ytqApiQueue || [];
+        window._ytqApiQueue = [];
+        window._ytqApiLoading = false;
+        q.forEach(function(fn){ try{ fn(false); }catch(_){} });
+      }
+    }, 8000);
+  }catch(_){ try{ cb(false); }catch(_){} }
+}
+function _ytqRequestOnce(player, token){
+  try{
+    var cur = window._ytq;
+    if(!cur || cur.token !== token || cur.done) return;
+    cur.done = true;
+    var levels = player.getAvailableQualityLevels
+      ? player.getAvailableQualityLevels() : [];
+    var best = _ytqPickBest(levels);
+    if(best && player.setPlaybackQuality) player.setPlaybackQuality(best);
+  }catch(_){}
+}
+function YTQualityEnhance(iframeEl){
+  if(!iframeEl) return;
+  var token = (++_ytqSeq) + ':' + (iframeEl.getAttribute('data-youtube-id') || '');
+  _ytqEnsureApi(function(ok){
+    if(!ok) return;
+    try{
+      if(!document.contains(iframeEl)) return; // already closed
+      var player = new YT.Player(iframeEl, {events: {
+        // Fast-start race cover: if already PLAYING when the API binds,
+        // the state-change event may never re-fire for this start.
+        onReady: function(){
+          try{
+            if(player.getPlayerState && player.getPlayerState() === 1){
+              _ytqRequestOnce(player, token);
+            }
+          }catch(_){}
+        },
+        onStateChange: function(ev){
+          if(!ev || ev.data !== 1) return; // 1 = PLAYING
+          _ytqRequestOnce(player, token);
+        }
+      }});
+      window._ytq = {player: player, token: token, done: false};
+    }catch(_){}
+  });
+}
+function YTQualityTeardown(){
+  try{
+    if(window._ytq && window._ytq.player && window._ytq.player.destroy){
+      window._ytq.player.destroy();
+    }
+  }catch(_){}
+  window._ytq = null;
+}
+
 // Video viewer — ONE native YouTube iframe only, minimal shell, ratio-aware
+// Tracks the active resize listener so EVERY close path (button, backdrop,
+// Escape) and every second-open tears it down — no leaked handlers/players.
+var _activeVideoResize = null;
+var _activeMsgHandler = null;
+var _activeVideoTimer = null;
+function teardownVideoHandlers(){
+  try{ YTQualityTeardown(); }catch(_){}
+  if(_activeVideoResize){ try{ window.removeEventListener('resize', _activeVideoResize); }catch(_){} _activeVideoResize = null; }
+  if(_activeMsgHandler){ try{ window.removeEventListener('message', _activeMsgHandler); }catch(_){} _activeMsgHandler = null; }
+  if(_activeVideoTimer){ try{ clearTimeout(_activeVideoTimer); }catch(_){} _activeVideoTimer = null; }
+}
 function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
   let yid = (youtubeId && /^[A-Za-z0-9_-]{11}$/.test(youtubeId)) ? youtubeId : youtubeIdFromUrl(youtubeId || youtubeUrl || "");
   if(!yid) yid = youtubeIdFromUrl(youtubeUrl || "");
-  const url = youtubeUrl || (yid ? `https://www.youtube.com/watch?v=${yid}` : "");
+  const url = youtubeUrl || (yid ? ("https://www.youtube.com/watch?v=" + yid) : "");
   const isShort = format === 'short';
   const displayTitle = (title || (isShort ? "Short" : "Video")).replace(/</g,'&lt;');
   const displayTitleAttr = (title || (isShort ? "Short" : "Video")).replace(/"/g,'&quot;');
@@ -889,35 +1618,47 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
     box.style.alignItems = 'center';
     box.style.justifyContent = 'center';
   }
-  const oldClose = document.getElementById('lightboxClose');
-  if(oldClose) oldClose.style.display = 'none';
 
   if(!yid || yid.length !== 11){
     const errHtml = `
       <div class="video-viewer" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px;max-width:min(92vw,480px);background:#111113;border-radius:16px;">
         <p style="color:#fafafa;font-weight:600;">Video unavailable here.</p>
         ${url ? `<a href="${url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#facc15;color:#000;padding:10px 18px;border-radius:999px;font-weight:600;font-size:13px;text-decoration:none">Watch on YouTube ↗</a>` : ``}
-        <button onclick="closeLightbox()" style="background:none;border:none;color:#a1a1aa;font-size:13px;cursor:pointer">Close</button>
+        <button onclick="closeLightbox()" style="background:none;border:none;color:#a1a1aa;font-size:13px;cursor:pointer;min-height:44px;min-width:44px">Close</button>
       </div>`;
+    // Error-over-open: tear down any live player/handlers before replacing
+    // content (single-player invariant holds for the fallback modal too).
+    if(document.getElementById('lightbox')?.classList.contains('open')){
+      try{ teardownVideoHandlers(); }catch(_){}
+      const oldFrame = document.getElementById('lightboxContent')?.querySelector('iframe');
+      if(oldFrame){ try{ oldFrame.src='about:blank'; }catch(_){} oldFrame.remove(); }
+    }
     openLightbox(errHtml);
     return;
   }
 
-  // Close any existing viewer — one viewer, one iframe
   if(document.getElementById('lightbox')?.classList.contains('open')){
+    try{ teardownVideoHandlers(); }catch(_){}
     const oldFrame = document.getElementById('lightboxContent')?.querySelector('iframe');
     if(oldFrame){ try{ oldFrame.src='about:blank'; }catch(_){} oldFrame.remove(); }
   }
 
-  const playerHtml = `<iframe data-youtube-id="${yid}" src="https://www.youtube-nocookie.com/embed/${yid}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player — ${displayTitleAttr}" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000"></iframe>`;
+  let ytOrigin = '';
+  try{
+    if(/^https?:$/.test(window.location.protocol) && window.location.origin && window.location.origin !== 'null'){
+      ytOrigin = '&origin=' + encodeURIComponent(window.location.origin);
+    }
+  }catch(_){}
+  const playerHtml = `<iframe data-youtube-id="${yid}" src="https://www.youtube-nocookie.com/embed/${yid}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1${ytOrigin}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="YouTube video player — ${displayTitleAttr}" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000"></iframe>`;
 
   const stageStyle = isShort
-    ? 'position:relative;overflow:hidden;background:#000;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);width:min(92vw,420px);aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;'
-    : 'position:relative;overflow:hidden;background:#000;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);width:min(92vw,1200px);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;';
+    ? 'position:relative;overflow:hidden;background:#000;border-radius:12px;box-shadow:none;width:min(92vw,420px);aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;'
+    : 'position:relative;overflow:hidden;background:#000;border-radius:12px;box-shadow:none;width:min(92vw,1200px);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;';
+
   const modalHtml = `
     <div class="video-viewer" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;background:#000;border-radius:16px;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:none;max-height:none;">
       <div style="display:flex;justify-content:flex-end;align-items:center;width:100%;flex-shrink:0;">
-        <button onclick="closeLightbox()" aria-label="Close video" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fafafa;display:grid;place-items:center;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
+        <button onclick="closeLightbox()" aria-label="Close video" style="width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fafafa;display:grid;place-items:center;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
       <div class="video-stage" data-format="${isShort ? 'short' : 'long'}" style="${stageStyle};border-radius:12px;box-shadow:none;">
         <div style="position:absolute;inset:0;">
@@ -932,29 +1673,27 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
   `;
 
   openLightbox(modalHtml);
+  try{ if(window.Telemetry) Telemetry.event('VIDEO_OPEN', { format: (isShort ? 'short' : 'long') }); }catch(e){}
 
   // Ratio-aware sizing: viewport → available → video ratio → ideal size (hug video, no giant empty)
   try{
     const stage = box?.querySelector('.video-stage');
     if(stage){
       const isShortStage = stage.dataset.format === 'short';
-      const headerH = 0; // no portfolio header — viewer hugs video per spec
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const availableWidth = Math.min(1200, Math.floor(vw * 0.92));
       const availableHeight = Math.floor(vh * 0.9) - 24;
       let width, height;
       if(isShortStage){
-        // Short: height-first, prioritize vertical
         height = Math.min(availableHeight, availableWidth * 16/9);
-        height = Math.max(320, Math.min(height, vh * 0.85 - headerH));
+        height = Math.max(320, Math.min(height, vh * 0.85));
         width = height * 9/16;
         if(width > availableWidth){
           width = availableWidth;
           height = width * 16/9;
         }
       } else {
-        // Long: width-first, maximize 16:9
         width = Math.min(availableWidth, availableHeight * 16/9, 1200);
         height = width * 9/16;
         if(height > availableHeight){
@@ -962,52 +1701,50 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
           width = height * 16/9;
         }
       }
-      // Apply — viewer hugs video, no clamp that breaks ratio
       stage.style.width = Math.round(width) + 'px';
       stage.style.height = Math.round(height) + 'px';
-      stage.style.maxWidth = 'none';
+      stage.style.maxWidth = '100%';
       stage.style.maxHeight = 'none';
-      // Handle resize while open
+      stage.style.marginInline = 'auto';
       const roHandler = () => {
-        // Re-calc on resize, debounced
-        clearTimeout(stage._resizeTimer);
-        stage._resizeTimer = setTimeout(()=>{
-          const vw2 = window.innerWidth;
-          const vh2 = window.innerHeight;
-          const aw2 = Math.min(1200, Math.floor(vw2 * 0.92));
-          const ah2 = Math.floor(vh2 * 0.9) - 24;
-          let w2,h2;
-          if(isShortStage){
-            h2 = Math.min(ah2, aw2 * 16/9);
-            h2 = Math.max(300, Math.min(h2, vh2 * 0.88 - headerH));
-            w2 = h2 * 9/16;
-            if(w2 > aw2){ w2=aw2; h2=w2*16/9; }
-          } else {
-            w2 = Math.min(aw2, ah2 * 16/9, 1200);
-            h2 = w2 * 9/16;
-            if(h2 > ah2){ h2=ah2; w2=h2*16/9; }
-          }
-          stage.style.width = Math.round(w2)+'px';
-          stage.style.height = Math.round(h2)+'px';
+        try{ clearTimeout(stage._resizeTimer); }catch(_){}
+        try{ clearTimeout(_activeVideoTimer); }catch(_){}
+        stage._resizeTimer = _activeVideoTimer = setTimeout(()=>{
+          try{
+            const vw2 = window.innerWidth;
+            const vh2 = window.innerHeight;
+            const aw2 = Math.min(1200, Math.floor(vw2 * 0.92));
+            const ah2 = Math.floor(vh2 * 0.9) - 24;
+            let w2,h2;
+            if(isShortStage){
+              h2 = Math.min(ah2, aw2 * 16/9);
+              h2 = Math.max(300, Math.min(h2, vh2 * 0.88));
+              w2 = h2 * 9/16;
+              if(w2 > aw2){ w2=aw2; h2=w2*16/9; }
+            } else {
+              w2 = Math.min(aw2, ah2 * 16/9, 1200);
+              h2 = w2 * 9/16;
+              if(h2 > ah2){ h2=ah2; w2=h2*16/9; }
+            }
+            const st = box?.querySelector('.video-stage');
+            if(st && document.getElementById('lightbox')?.classList.contains('open')){
+              st.style.width = Math.round(w2)+'px';
+              st.style.height = Math.round(h2)+'px';
+            } else {
+              window.removeEventListener('resize', roHandler);
+            }
+          }catch(e){}
         }, 100);
       };
+      // Single live resize handler: replace any prior one before adding.
+      // teardownVideoHandlers()/closeLightbox own the only removal paths, so
+      // window.closeLightbox stays a stable reference (no per-open wrapper
+      // stacking on second-open).
+      if(_activeVideoResize && _activeVideoResize !== roHandler){ try{ window.removeEventListener('resize', _activeVideoResize); }catch(_){} }
+      try{ clearTimeout(_activeVideoTimer); }catch(_){}
+      _activeVideoTimer = null;
       window.addEventListener('resize', roHandler);
-      // Cleanup on close
-      const origClose = window.closeLightbox;
-      const cleanup = () => {
-        window.removeEventListener('resize', roHandler);
-        clearTimeout(stage._resizeTimer);
-      };
-      // Patch closeLightbox to cleanup
-      if(!stage._patchedClose){
-        stage._patchedClose = true;
-        const prevClose = window.closeLightbox;
-        window.closeLightbox = function(){
-          cleanup();
-          window.closeLightbox = prevClose;
-          return prevClose.apply(this, arguments);
-        };
-      }
+      _activeVideoResize = roHandler;
     }
   }catch(e){}
 
@@ -1023,39 +1760,58 @@ function playVideo(youtubeUrl, youtubeId, format, title, thumb, desc){
   }
   if(playerEl){
     playerEl.onerror = showFallback;
+    // VIDEO_READY semantics: iframe `load` observed (once). NOT playback
+    // started, NOT video watched — player state belongs in the lab.
+    try{ if(window.Telemetry) playerEl.addEventListener('load', function(){ try{ Telemetry.event('VIDEO_READY', {}); }catch(e){} }, { once: true }); }catch(e){}
     const msgHandler = (e)=>{
       try{
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
         if(data && data.event === 'onError') showFallback();
       }catch(_){}
     };
-    window.addEventListener('message', msgHandler, {once:true});
-    setTimeout(()=> window.removeEventListener('message', msgHandler), 5000);
+    // Late-error path: stay subscribed while the modal is open (YouTube can
+    // post onError well after load); torn down in closeLightbox on every
+    // close path, and replaced on every second-open (no 5s window, no leak).
+    if(_activeMsgHandler){ try{ window.removeEventListener('message', _activeMsgHandler); }catch(_){} _activeMsgHandler = null; }
+    window.addEventListener('message', msgHandler);
+    _activeMsgHandler = msgHandler;
   }
+  try{ YTQualityEnhance(box?.querySelector('iframe')); }catch(_){}
 }
 
 document.getElementById('menuBtn')?.addEventListener('click', ()=> document.getElementById('mobileMenu').classList.toggle('open'));
-document.querySelectorAll('#mobileMenu a').forEach(a=> a.addEventListener('click', ()=> document.getElementById('mobileMenu').classList.remove('open')));
+document.getElementById('mobileMenu')?.addEventListener('click', (e)=>{ if(e.target && e.target.closest && e.target.closest('a')) document.getElementById('mobileMenu').classList.remove('open'); });
+// V3.0 nav drawer: ESC + outside-click (backdrop) close, no push (drawer stays absolute overlay, CSS only)
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ document.getElementById('mobileMenu')?.classList.remove('open'); } });
+document.addEventListener('click', (e)=>{ const m=document.getElementById('mobileMenu'); if(!m||!m.classList.contains('open')) return; if(e.target.closest && e.target.closest('.nav')) return; m.classList.remove('open'); });
 
 const lightbox = document.getElementById('lightbox');
 const lightboxContent = document.getElementById('lightboxContent');
 let _prevFocus = null;
 let _scrollY = 0;
 function openLightbox(html){
-  _prevFocus = document.activeElement;
-  _scrollY = window.scrollY;
-  const sbWidth = window.innerWidth - document.documentElement.clientWidth;
-  lightboxContent.innerHTML = html;
-  lightbox.classList.add('open');
-  document.body.style.overflow='hidden';
-  if(sbWidth>0){
-    document.body.style.paddingRight = sbWidth+'px';
-    const nav=document.querySelector('.nav');
-    if(nav) nav.style.paddingRight = sbWidth+'px';
+  const alreadyOpen = lightbox.classList.contains('open');
+  if(!alreadyOpen){
+    _prevFocus = document.activeElement;
+    _scrollY = window.scrollY;
+    const sbWidth = window.innerWidth - document.documentElement.clientWidth;
+    lightboxContent.innerHTML = html;
+    lightbox.classList.add('open');
+    document.body.style.overflow='hidden';
+    if(sbWidth>0){
+      document.body.style.paddingRight = sbWidth+'px';
+      const nav=document.querySelector('.nav');
+      if(nav) nav.style.paddingRight = sbWidth+'px';
+    }
+    document.body.style.position='fixed';
+    document.body.style.top=`-${_scrollY}px`;
+    document.body.style.width='100%';
+  } else {
+    // Re-open over an open modal (second video / error fallback): swap
+    // content only, preserve the original scroll lock and focus return.
+    lightboxContent.innerHTML = html;
+    lightbox.classList.add('open');
   }
-  document.body.style.position='fixed';
-  document.body.style.top=`-${_scrollY}px`;
-  document.body.style.width='100%';
   // focus close
   requestAnimationFrame(()=>{
     const btn = lightboxContent.querySelector('button');
@@ -1064,6 +1820,12 @@ function openLightbox(html){
   });
 }
 function closeLightbox(){
+  // Idempotent: Escape/backdrop/visibility handlers all funnel here, so a
+  // stray Escape with no modal must be a no-op (never scroll or refocus).
+  if(!lightbox.classList.contains('open')) return;
+  try{ if(window.Telemetry && lightboxContent.querySelector('iframe')) Telemetry.event('VIDEO_CLOSE', {}); }catch(e){}
+  // Single teardown path: helper owns YT player + resize + message + timer.
+  try{ teardownVideoHandlers(); }catch(_){}
   const iframe = lightboxContent.querySelector('iframe');
   if(iframe){ try{ iframe.src='about:blank'; }catch(_){} iframe.remove(); }
   lightboxContent.innerHTML='';
@@ -1078,17 +1840,32 @@ function closeLightbox(){
   window.scrollTo(0, _scrollY);
   lightboxContent.className='lightbox-content';
   lightboxContent.removeAttribute('style');
-  // Restore old close button for next non-minimal use
-  const oldCloseRestore = document.getElementById('lightboxClose');
-  if(oldCloseRestore) oldCloseRestore.style.display='';
+  // (V3: dead #lightboxClose restore removed — element never exists)
   if(activePreview) hidePreview(activePreview);
   if(_prevFocus && _prevFocus.focus) try{ _prevFocus.focus(); }catch(_){}
 }
-document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
 lightbox?.addEventListener('click', e=>{ if(e.target===lightbox) closeLightbox(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+// Background playback: closing the tab/switching apps tears down the player
+// via the existing closeLightbox path (resize listener, iframe, scroll lock).
+// Scoped to an open lightbox so hidden-tab changes with no modal are no-ops.
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden && lightbox?.classList.contains('open')) closeLightbox(); });
 
 function bindCards(heroId){
+  // Bind-after-gate (P0/P1): OFF showreel gets no src/iframe/player, no
+  // listeners, no keyboard presence. Gate mirrors renderSite media logic:
+  // hero visible AND showreel content visible AND showreel section visible
+  // AND hero display.media not OFF. Missing flags default true (contract).
+  const heroOff = (()=>{
+    try{
+      if(CONTENT?.hero?.visible===false) return true;
+      if((CONTENT?.hero?.display?.media)===false) return true;
+      if(CONTENT?.showreel?.visible===false) return true;
+      const ss = ((CONTENT?.sections||[]).find(s=>s.id==='showreel'));
+      if(ss && !isVisible(ss)) return true;
+      return false;
+    }catch(e){ return false; }
+  })();
   const heroBtn = document.getElementById('playShowreel');
   const heroCard = document.getElementById('heroCard');
   const heroUrl = CONTENT?.showreel?.youtubeUrl || (heroId ? `https://www.youtube.com/watch?v=${heroId}` : "");
@@ -1099,48 +1876,143 @@ function bindCards(heroId){
     if(!heroId) return;
     playVideo(heroUrl, heroId, 'long', heroTitle, heroThumb);
   }
-  if(heroBtn) heroBtn.onclick = onHeroClick;
-  if(heroCard){
-    heroCard.onclick = onHeroClick;
-    heroCard.addEventListener('keydown', e=>{ if(e.key==='Enter') onHeroClick(e); });
-    heroCard.setAttribute('role','button'); heroCard.setAttribute('tabindex','0'); heroCard.style.cursor='pointer';
+  if(heroOff || !heroId){
+    if(heroBtn){ heroBtn.onclick = null; heroBtn.tabIndex = -1; heroBtn.setAttribute('aria-hidden','true'); }
+    if(heroCard){ heroCard.onclick = null; heroCard.onkeydown = null; heroCard.tabIndex = -1; heroCard.setAttribute('aria-hidden','true'); }
+  } else {
+    if(heroBtn){ heroBtn.onclick = onHeroClick; heroBtn.tabIndex = 0; heroBtn.removeAttribute('aria-hidden'); }
+    if(heroCard){
+      heroCard.onclick = onHeroClick;
+      heroCard.onkeydown = e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); onHeroClick(e); } };
+      heroCard.setAttribute('role','button'); heroCard.setAttribute('tabindex','0'); heroCard.style.cursor='pointer';
+      heroCard.removeAttribute('aria-hidden');
+    }
   }
 
   document.querySelectorAll('.card').forEach(card=>{
     if(card.dataset.bound) return; card.dataset.bound="1";
     card.addEventListener('click', ()=>{
       const yid = card.dataset.youtubeId || "";
-      const url = card.dataset.youtubeUrl || "";
-      const format = card.dataset.format || 'long';
-      const title = card.dataset.title || "";
-      const thumb = card.dataset.thumb || "";
-      const desc = card.dataset.desc || "";
       const isVideo = yid && yid.length===11;
       if(isVideo){
+        const url = card.dataset.youtubeUrl || "";
+        const format = card.dataset.format || 'long';
+        const title = card.dataset.title || "";
+        const thumb = card.dataset.thumb || "";
+        const desc = card.dataset.desc || "";
         playVideo(url, yid, format, title, thumb, desc);
       } else {
+        const title = card.dataset.title || "";
+        const desc = card.dataset.desc || "";
         const img = card.querySelector('img');
         const src = img?.dataset.custom || img?.src || "";
-        if(src && src !== PLACEHOLDER_SVG) openLightbox(`<div style="padding:16px;background:#111113;color:#fafafa;display:flex;justify-content:space-between;align-items:center"><h3>${title.replace(/</g,'&lt;')}</h3><button onclick="closeLightbox()" style="background:none;border:none;color:#a1a1aa;font-size:18px;cursor:pointer">✕</button></div><img src="${src}" alt="" style="max-width:100%;max-height:80vh;object-fit:contain"><p style="padding:12px 16px;color:#a1a1aa;font-size:13px">${desc.replace(/</g,'&lt;')}</p>`);
+        if(src && src !== PLACEHOLDER_SVG) openLightbox(`<div style="padding:16px;background:#111113;color:#fafafa;display:flex;justify-content:space-between;align-items:center"><h3>${title.replace(/</g,'&lt;')}</h3><button onclick="closeLightbox()" style="background:none;border:none;color:#a1a1aa;font-size:18px;cursor:pointer;min-height:44px;min-width:44px">✕</button></div><img src="${src}" alt="" style="max-width:100%;max-height:80vh;object-fit:contain"><p style="padding:12px 16px;color:#a1a1aa;font-size:13px">${desc.replace(/</g,'&lt;')}</p>`);
       }
     });
-    card.addEventListener('keydown', e=>{ if(e.key==='Enter') card.click(); });
+    card.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); card.click(); } });
   });
 }
 
 document.getElementById('contactForm')?.addEventListener('submit', (e)=>{
   e.preventDefault();
-  const d = new FormData(e.target);
-  const email = CONTENT?.contact?.email || "hello@sahil.studio";
-  const subject = encodeURIComponent(`Portfolio inquiry: ${d.get('service')} — from ${d.get('name')}`);
-  const body = encodeURIComponent(`Name: ${d.get('name')}\nEmail: ${d.get('email')}\nService: ${d.get('service')}\n\n${d.get('message')}`);
+  const form = e.target;
+  const note = document.getElementById('formNote');
+  // Clear prior errors
+  form.querySelectorAll('[aria-invalid]').forEach(el=>el.removeAttribute('aria-invalid'));
+  form.querySelectorAll('.form-error').forEach(el=>el.remove());
+  const d = new FormData(form);
+  const name = (d.get('name')||"").toString().trim();
+  const emailVal = (d.get('email')||"").toString().trim();
+  const service = (d.get('service')||"").toString();
+  const message = (d.get('message')||"").toString().trim();
+  const cfg = CONTENT?.contact?.form || {};
+  let firstInvalid = null;
+  const flag = (fieldName, msg)=>{
+    const el = form.querySelector(`[name="${fieldName}"]`);
+    if(!el) return;
+    el.setAttribute('aria-invalid','true');
+    const err = document.createElement('p');
+    err.className = 'form-error';
+    err.textContent = msg;
+    el.insertAdjacentElement('afterend', err);
+    if(!firstInvalid) firstInvalid = el;
+  };
+  if(cfg.display?.name!==false && !name) flag('name','Please enter your name.');
+  if(cfg.display?.email!==false && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) flag('email','Please enter a valid email.');
+  // P0 placeholder-option validation: empty service never submits (placeholder is
+  // value="" disabled selected). Inline, non-destructive, preserves data, no alert().
+  // Visible check so hidden-service state (no selectable services) still submits.
+  const _svcEl = form.querySelector('[name="service"]');
+  const _svcWrap = _svcEl ? (_svcEl.closest('div') || _svcEl) : null;
+  const _svcVisible = !!_svcEl && _svcEl.style.display!=='none' && (!_svcWrap || _svcWrap.style.display!=='none') && cfg.display?.service!==false;
+  if(_svcVisible && !service) flag('service','Please choose a service.');
+  if(cfg.messageRequired && !message) flag('message','Please tell me about the project.');
+  if(firstInvalid){ try{ if(window.Telemetry) Telemetry.event('CONTACT_ERROR', {}); }catch(e){} firstInvalid.focus(); return; }
+  // Canonical contact identity (owner decision: gmail). No contradictory fallback.
+  const email = (CONTENT?.contact?.email || "").trim() || "sahilvasavahere@gmail.com";
+  const subject = encodeURIComponent(`Portfolio inquiry: ${service || 'General'} — from ${name || 'Website visitor'}`);
+  const body = encodeURIComponent(`Name: ${name}\nEmail: ${emailVal}\nService: ${service || 'Not specified'}\n\n${message}`);
   window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-  document.getElementById('formNote').textContent = "Opening email app... or email directly: " + email;
-  e.target.reset();
+  if(note) note.textContent = "Opening email app... or email directly: " + email;
+  try{ if(window.Telemetry) Telemetry.event('CONTACT_SUBMIT', {}); }catch(e){}
 });
 
-if(CONTENT) renderSite();
-else document.addEventListener('DOMContentLoaded', renderSite);
+if(CONTENT){
+  if(window.WORK_PAGE && typeof renderWorkPage === 'function') renderWorkPage();
+  else renderSite();
+} else document.addEventListener('DOMContentLoaded', ()=>{ renderSite(); });
+
+// TELEMETRY SCAFFOLD v1 (inert-by-default) — delete this IIFE + telemetry.js
+// <script> tag to remove. Inert proof: returns before Telemetry.init unless
+// CONTENT.telemetry.enabled===true AND endpoint non-empty; Telemetry.init
+// itself early-returns on DNT/sample-out with zero timers/network. Every hook
+// below is a single guarded call that cannot alter existing control flow.
+(function(){
+  try{
+    var _t = (typeof CONTENT !== 'undefined' && CONTENT) ? CONTENT.telemetry : null;
+    if(!_t || _t.enabled !== true || !_t.endpoint) return;
+    if(!window.Telemetry || !Telemetry.init(_t)) return;
+    try{ Telemetry.event('PAGE_VIEW', {}); }catch(e){}
+    try{ Telemetry.performanceSample(); }catch(e){}
+    try{
+      document.querySelectorAll('.hero-cta a, #viewAllWork, .work-cta a').forEach(function(el){
+        try{ el.addEventListener('click', function(){ try{ Telemetry.event('CTA_CLICK', { label: (el.textContent || '').slice(0, 80) }); }catch(e){} }); }catch(e){}
+      });
+    }catch(e){}
+    try{
+      window.addEventListener('error', function(ev){ try{ Telemetry.error('window.error', (ev && ev.message) || 'error'); }catch(e){} });
+      window.addEventListener('unhandledrejection', function(ev){ try{ Telemetry.error('unhandledrejection', (ev && ev.reason && (ev.reason.message || String(ev.reason))) || 'rejection'); }catch(e){} });
+    }catch(e){}
+  }catch(e){}
+})();
 
 window.handleThumbError = handleThumbError;
 window.closeLightbox = closeLightbox;
+
+// HOVER-POSITION FIX (2026-09-11) — reset-only, no highlight element, no coords.
+// All hovers are per-element CSS :hover (the browser clears each one on
+// pointerleave automatically — nothing shared to go stale). This only resets
+// transient UI chrome on page/section/viewport change so nothing reads as a
+// stale highlight elsewhere (menu backdrop after navigating to Services/About,
+// preview flag after rapid tab switches or leaving the page). No layout, data,
+// filter, playback, ESC, menu, form, or link behavior changed.
+(function(){
+  function resetHoverChrome(){
+    try{ if(typeof hidePreview === 'function' && typeof activePreview !== 'undefined' && activePreview) hidePreview(activePreview); }catch(_){}
+    var m = document.getElementById('mobileMenu');
+    if(m) m.classList.remove('open');
+  }
+  window.addEventListener('hashchange', resetHoverChrome);
+  window.addEventListener('pagehide', resetHoverChrome);
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) resetHoverChrome(); });
+  var _rzT = null;
+  window.addEventListener('resize', function(){
+    if(_rzT) clearTimeout(_rzT);
+    _rzT = setTimeout(function(){
+      try{
+        var btn = document.getElementById('menuBtn');
+        if(btn && getComputedStyle(btn).display === 'none') resetHoverChrome();
+      }catch(_){}
+    }, 120);
+  });
+})();

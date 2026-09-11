@@ -37,3 +37,26 @@ npm-debug.log*
 # Temporary
 *.tmp
 *.temp
+
+# Production-excluded: local backups, QA captures, lab tools, session docs.
+# These stay on this machine and must never be committed to the public repo.
+# (Production portrait assets/images/1789137190608.jpg is NOT excluded.)
+_backups/
+Screenshots (Previews)/
+observer.js
+CHANGELOG.md
+ISSUE_REGISTER.md
+MASTER_STATUS.md
+
+# Confirmed orphan/duplicate dev images (not referenced by site code)
+assets/images/1789137190568.jpg
+assets/images/1789137190568_-_copy.jpg
+assets/images/1789137190568_-_copy_-_Copy.jpg
+assets/images/1789137190568_-_copy_2.jpg
+assets/images/1789137190568_-_copy_3.jpg
+assets/images/1789137190568_-_copy_4.jpg
+assets/images/IMG_20250809_134740.jpg
+assets/images/Screenshot_85_2.png
+assets/images/Screenshot_85_3.png
+# Formerly-tracked preview screenshots (untracked via git rm --cached, kept local)
+assets/images/Screenshot_*.png

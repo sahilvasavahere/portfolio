@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Work — Sahil — Portfolio</title>
+  <meta name="description" content="A collection of my video editing work.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- MOTION UPDATE v1 — DELETE THIS BLOCK TO REVERT (rollback-safe, optional).
+       Removal: delete this block + the motion.js block before </body> + delete
+       motion.css + motion.js. No other file was touched (style.css/script.js/
+       config.js untouched). Disable without delete: <html data-motion="off">.
+       Backup: _backups/motion-update-v1-2026-09-11-16-15-39/work.html -->
+  <link rel="stylesheet" href="motion.css" />
+  <script>try{document.documentElement.classList.add('motion-enabled')}catch(e){}</script>
+  <!-- /MOTION UPDATE v1 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23facc15'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='18' fill='%23000'%3ES%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="fileWarn" style="display:none;background:#facc15;color:#000;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:60">
+    ⚠️ Opened via file:// — YouTube embeds need HTTP. Run <code style="background:rgba(0,0,0,0.1);padding:2px 6px;border-radius:4px">python -m http.server 8000</code> and open <a href="http://localhost:8000/work.html" style="text-decoration:underline">http://localhost:8000/work.html</a>
+  </div>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo">SAHIL<span>.</span></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="work.html" class="active" aria-current="page">Work</a>
+        <a href="index.html#about">About</a>
+        <a href="index.html#services">Services</a>
+        <a href="index.html#contact" class="btn btn-sm btn-ghost">Contact</a>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="index.html">Home</a>
+      <a href="work.html" class="active" aria-current="page">Work</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <main class="section container work-page" id="top">
+    <div class="section-head">
+      <div class="section-head-left">
+        <h2>Work</h2>
+        <p>A collection of my video editing work.</p>
+        <p id="workCount" style="color:#a1a1aa;font-size:13px;margin-top:4px"></p>
+      </div>
+      <div class="work-tabs" role="tablist" aria-label="Filter projects">
+        <button class="tab-btn wtab active" data-filter="all" role="tab" aria-selected="true" aria-pressed="true">All</button>
+        <button class="tab-btn wtab" data-filter="long" role="tab" aria-selected="false" aria-pressed="false">Long-form</button>
+        <button class="tab-btn wtab" data-filter="short" role="tab" aria-selected="false" aria-pressed="false">Short-form</button>
+        <!-- V2.7: Ads/Other hidden — no projects in these buckets; empty pills hurt credibility. Re-add when real items exist. -->
+      </div>
+    </div>
+    <div id="workSectionLong">
+      <h3 class="work-subhead">Long-form</h3>
+      <div class="grid grid-long" id="workGridLong"></div>
+    </div>
+    <div id="workSectionShort">
+      <h3 class="work-subhead">Short-form</h3>
+      <div class="grid grid-short" id="workGridShort"></div>
+    </div>
+    <div id="workEmpty" style="display:none;text-align:center;padding:40px;color:#a1a1aa"></div>
+    <div class="work-cta">
+      <a href="index.html#contact" class="btn btn-ghost">Let's Talk →</a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span id="footerText">© 2026 Sahil.</span>
+      <span><a href="#top">Back to top ↑</a></span>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Video player">
+    <div class="lightbox-content" id="lightboxContent"></div>
+  </div>
+
+  <!-- Parser-blocking (no defer): grids must populate before first paint,
+       otherwise the empty shell paints first and the late card insertion
+       shifts the whole page (measured CLS 0.72). Order config→script kept. -->
+  <script src="config.js"></script>
+  <script>window.WORK_PAGE = true;</script>
+  <script src="script.js"></script>
+  <script src="telemetry.js" defer></script>
+  <!-- MOTION UPDATE v1 — DELETE THIS BLOCK TO REVERT (rollback-safe, optional).
+       Removal: delete this block + the <head> motion.css block + delete
+       motion.css + motion.js. Restores base (backups in _backups/
+       motion-update-v1-2026-09-11-16-15-39/). Disable: <html data-motion="off">. -->
+  <script src="motion.js" defer></script>
+  <!-- /MOTION UPDATE v1 -->
+</body>
+</html>

@@ -1,12 +1,12 @@
 const CONFIG = {
   "profile": {
     "name": "SAHIL",
-    "tagline": "VIDEO EDITOR • PHOTOGRAPHER • CREATOR"
+    "tagline": "YouTube, Reels, Shorts & Ads."
   },
   "hero": {
     "title": "Video Editor",
-    "titleAccent": "that makes you stop scrolling.",
-    "description": "Talking-head videos, podcasts, reels, shorts, and YouTube content, edited with sharp pacing and clean storytelling built to hold attention.",
+    "titleAccent": "specializing in social media videos.",
+    "description": "I edit talking-head videos, podcasts, educational content and short-form videos with a focus on clear storytelling, pacing, sound and color.",
     "stats": [
       {
         "id": "stat_8069",
@@ -18,7 +18,7 @@ const CONFIG = {
       {
         "id": "stat_90f1",
         "value": "800K+",
-        "label": "Views Generated",
+        "label": "Views Across Edited Content",
         "visible": true,
         "display": true
       },
@@ -29,16 +29,9 @@ const CONFIG = {
         "visible": false,
         "display": false
       },
-      {
-        "id": "stat_6f42",
-        "value": "999+",
-        "label": "Test Save",
-        "visible": false,
-        "display": false
-      }
     ],
     "visible": true,
-    "eyebrow": "VIDEO EDITOR • PHOTOGRAPHER • CREATOR",
+    "eyebrow": "YouTube, Reels, Shorts & Ads.",
     "display": {
       "eyebrow": false,
       "title": true,
@@ -48,19 +41,25 @@ const CONFIG = {
       "media": true
     },
     "ctaPrimary": {
-      "text": "See the Work →",
-      "href": "#work",
+      "text": "My Work →",
+      "href": "work.html",
       "visible": true
     },
     "ctaSecondary": {
       "text": "Let's Talk",
       "href": "#contact",
       "visible": true
+    },
+    "offset": {
+      "eyebrow": 16,
+      "title": -4,
+      "highlight": 0,
+      "description": 0
     }
   },
   "showreel": {
-    "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "youtubeId": "dQw4w9WgXcQ",
+    "youtubeUrl": "",
+    "youtubeId": "",
     "thumbnail": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&q=80",
     "title": "2026 Editing Showreel",
     "label": "2026 SHOWREEL — Click to play",
@@ -85,7 +84,7 @@ const CONFIG = {
       "thumbnail": "https://images.unsplash.com/photo-1536243287037-7aa54338f5b9?w=600&q=80",
       "thumbnailAlt": "7 Things I Gave Up video thumbnail",
       "thumbnailFit": "cover",
-      "meta": "DaVinci Resolve · Personal Development",
+      "meta": "Personal Development · Talking Head",
       "description": "",
       "visible": true,
       "order": 0,
@@ -106,9 +105,9 @@ const CONFIG = {
       "youtubeUrl": "https://www.youtube.com/watch?v=V2126FNQ5zo",
       "youtubeId": "V2126FNQ5zo",
       "thumbnail": "",
-      "thumbnailAlt": "Wedding Teaser — Cinematic",
+      "thumbnailAlt": "AI Is Replacing Jobs. Now What? video thumbnail",
       "thumbnailFit": "cover",
-      "meta": "DaVinci Resolve · Storytelling",
+      "meta": "Storytelling · Talking Head",
       "description": "",
       "visible": true,
       "order": 1,
@@ -129,9 +128,9 @@ const CONFIG = {
       "youtubeUrl": "https://www.youtube.com/watch?v=7YR96y3iUGA",
       "youtubeId": "7YR96y3iUGA",
       "thumbnail": "",
-      "thumbnailAlt": "YouTube Edit — Vlog Style",
+      "thumbnailAlt": "The Idea Matrix video thumbnail",
       "thumbnailFit": "cover",
-      "meta": "DaVinci Resolve · Educational",
+      "meta": "Educational · Talking Head",
       "description": "",
       "visible": true,
       "order": 2,
@@ -152,9 +151,9 @@ const CONFIG = {
       "youtubeUrl": "https://www.youtube.com/watch?v=GYgbarqC-PM",
       "youtubeId": "GYgbarqC-PM",
       "thumbnail": "https://images.unsplash.com/photo-1536243287037-7aa54338f5b9?w=600&q=80",
-      "thumbnailAlt": "Showreel 2024 — Best Cuts",
+      "thumbnailAlt": "Amazon KDP Explained video thumbnail",
       "thumbnailFit": "cover",
-      "meta": "DaVinci Resolve · Educational",
+      "meta": "Educational · Talking Head",
       "description": "",
       "visible": true,
       "order": 3,
@@ -168,39 +167,16 @@ const CONFIG = {
       }
     },
     {
-      "id": "proj_short_qk",
-      "title": "Short Test QkB7eR90ezw",
-      "category": "Short",
-      "format": "short",
-      "youtubeUrl": "https://www.youtube.com/watch?v=QkB7eR90ezw",
-      "youtubeId": "QkB7eR90ezw",
-      "thumbnail": "",
-      "thumbnailAlt": "Short QkB7eR90ezw",
-      "thumbnailFit": "cover",
-      "meta": "Short • 9:16",
-      "description": "",
-      "visible": true,
-      "order": 4,
-      "display": {
-        "category": true,
-        "thumbnail": true,
-        "playButton": true,
-        "title": true,
-        "meta": true,
-        "description": true
-      }
-    },
-    {
       "id": "proj_short_b1",
-      "title": "Short Test B1IY8xpb1EQ",
+      "title": "Investment Tools",
       "category": "Short",
       "format": "short",
       "youtubeUrl": "https://www.youtube.com/watch?v=B1IY8xpb1EQ",
       "youtubeId": "B1IY8xpb1EQ",
       "thumbnail": "",
-      "thumbnailAlt": "Short B1IY8xpb1EQ",
+      "thumbnailAlt": "Short Edit 02",
       "thumbnailFit": "cover",
-      "meta": "Short • 9:16",
+      "meta": "Short-form · Edit + Captions",
       "description": "",
       "visible": true,
       "order": 5,
@@ -215,15 +191,15 @@ const CONFIG = {
     },
     {
       "id": "proj_short_kq",
-      "title": "Short Test KQ9xdGoO4ms",
+      "title": "Soft Skills",
       "category": "Short",
       "format": "short",
       "youtubeUrl": "https://www.youtube.com/watch?v=KQ9xdGoO4ms",
       "youtubeId": "KQ9xdGoO4ms",
       "thumbnail": "",
-      "thumbnailAlt": "Short KQ9xdGoO4ms",
+      "thumbnailAlt": "Short Edit 03",
       "thumbnailFit": "cover",
-      "meta": "Short • 9:16",
+      "meta": "Short-form · Edit + Captions",
       "description": "",
       "visible": true,
       "order": 6,
@@ -235,64 +211,202 @@ const CONFIG = {
         "meta": true,
         "description": true
       }
+    },
+    {
+      "id": "proj_aec8d2",
+      "title": "The Anti-Textbook PM",
+      "category": "Podcast",
+      "format": "long",
+      "youtubeUrl": "https://www.youtube.com/watch?v=bl9ZJu6qJGQ",
+      "youtubeId": "bl9ZJu6qJGQ",
+      "thumbnail": "",
+      "thumbnailAlt": "The Anti-Textbook PM",
+      "thumbnailFit": "cover",
+      "meta": "Educational · Podcast",
+      "description": "",
+      "visible": true,
+      "order": 6,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
+    },
+    {
+      "id": "proj_b176a5",
+      "title": "AI Fashion Revolution!",
+      "category": "Podcast",
+      "format": "long",
+      "youtubeUrl": "https://www.youtube.com/watch?v=LNRmVB3VTEo",
+      "youtubeId": "LNRmVB3VTEo",
+      "thumbnail": "",
+      "thumbnailAlt": "AI Fashion Revolution!",
+      "thumbnailFit": "cover",
+      "meta": "AI & UX · Podcast",
+      "description": "",
+      "visible": true,
+      "order": 7,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
+    },
+    {
+      "id": "proj_51f458",
+      "title": "Reverse Designing in product management",
+      "category": "Talking Head",
+      "format": "long",
+      "youtubeUrl": "https://www.youtube.com/watch?v=H1FKTcB41wU",
+      "youtubeId": "H1FKTcB41wU",
+      "thumbnail": "",
+      "thumbnailAlt": "Reverse Designing in product management",
+      "thumbnailFit": "cover",
+      "meta": "Product Strategy · Talking Head",
+      "description": "",
+      "visible": false,
+      "order": 8,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
+    },
+    {
+      "id": "proj_81124d",
+      "title": "Pay 50% Tax",
+      "category": "Short",
+      "format": "short",
+      "youtubeUrl": "https://www.youtube.com/watch?v=j2Y90WmdfMA",
+      "youtubeId": "j2Y90WmdfMA",
+      "thumbnail": "",
+      "thumbnailAlt": "Pay 50% Tax",
+      "thumbnailFit": "cover",
+      "meta": "Short-form · Edit + Captions",
+      "description": "",
+      "visible": true,
+      "order": 9,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
+    },
+    {
+      "id": "proj_301465",
+      "title": "KYC and KYM",
+      "category": "Short",
+      "format": "short",
+      "youtubeUrl": "https://www.youtube.com/watch?v=QkB7eR90ezw",
+      "youtubeId": "QkB7eR90ezw",
+      "thumbnail": "",
+      "thumbnailAlt": "KYC and KYM",
+      "thumbnailFit": "cover",
+      "meta": "Short-form · Edit + Captions",
+      "description": "",
+      "visible": true,
+      "order": 10,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
+    },
+    {
+      "id": "proj_1b81e6",
+      "title": "UPI Cards",
+      "category": "Reels",
+      "format": "short",
+      "youtubeUrl": "https://www.youtube.com/watch?v=h74gbK79lwo",
+      "youtubeId": "h74gbK79lwo",
+      "thumbnail": "",
+      "thumbnailAlt": "UPI Cards",
+      "thumbnailFit": "cover",
+      "meta": "Short-form · Edit + Captions",
+      "description": "",
+      "visible": true,
+      "order": 11,
+      "display": {
+        "category": true,
+        "thumbnail": true,
+        "playButton": true,
+        "title": true,
+        "meta": true,
+        "description": true
+      }
     }
   ],
   "about": {
-    "title": "Editor who cares about story, not just transitions.",
-    "text": "Hey, I'm Sahil — video editor with 3+ years experience. I cut YouTube, Reels, Ads & Cinematic films. My focus is pacing, sound and color — the things that make people watch till the end.",
+    "title": "I'm Sahil, a video editor with 3+ years of experience.",
+    "text": "I work across YouTube, Reels, Shorts, podcasts, ads and cinematic content. My approach is simple: clear storytelling, good pacing, clean sound and consistent color.",
     "points": [
       {
         "id": "po_6fe3",
-        "text": "YouTube, Reels/Shorts, Ads & Cinematic edits",
+        "text": "YouTube, Reels & Shorts",
         "visible": true,
         "order": 0
       },
       {
         "id": "po_0985",
-        "text": "Fast delivery + revisions till you love it",
+        "text": "Talking-head, podcasts & educational content",
         "visible": true,
         "order": 1
       },
       {
         "id": "po_db8c",
-        "text": "DaVinci Resolve • Premiere Pro • After Effects",
+        "text": "Storytelling, pacing, sound design & color",
         "visible": true,
         "order": 2
+      },
+      {
+        "id": "po_0fad",
+        "text": "DaVinci Resolve",
+        "visible": true,
+        "order": 3
       }
     ],
     "tools": [
       {
         "id": "to_aa30",
         "text": "DaVinci Resolve",
-        "visible": false,
+        "visible": true,
         "order": 0
       },
       {
         "id": "to_2b1b",
-        "text": "Premiere Pro",
+        "text": "Motion Graphics",
         "visible": true,
         "order": 1
       },
       {
         "id": "to_6ff5",
-        "text": "After Effects",
+        "text": "Sound Design",
         "visible": true,
         "order": 2
       },
       {
         "id": "to_c248",
-        "text": "Sound Design",
-        "visible": true,
-        "order": 3
-      },
-      {
-        "id": "to_24cc",
         "text": "Color Grading",
         "visible": true,
-        "order": 4
+        "order": 3
       }
     ],
-    "image": "assets/images/Screenshot_86.png",
+    "image": "assets/images/1789137190608.jpg",
     "visible": true,
     "eyebrow": "ABOUT ME",
     "imageAlt": "Editor who cares about story, not just transitions.",
@@ -309,7 +423,7 @@ const CONFIG = {
     {
       "icon": "🎬",
       "title": "YouTube Editing",
-      "description": "Cuts, captions, story, sound — keep viewers watching.",
+      "description": "Long-form YouTube videos with clean pacing, structured\nstorytelling, sound design and supporting visuals.",
       "price": "Starting at ₹1,500 / video",
       "ctaText": "",
       "ctaHref": "",
@@ -321,15 +435,15 @@ const CONFIG = {
         "title": true,
         "description": true,
         "price": false,
-        "cta": true
+        "cta": false
       },
       "id": "svc_041859",
       "order": 0
     },
     {
       "icon": "⚡",
-      "title": "Reels / Shorts",
-      "description": "Viral fast cuts, trending effects, hooks in 2 sec.",
+      "title": "Reels & Shorts",
+      "description": "Short-form edits for Instagram Reels and YouTube Shorts,\nwith clean cuts, captions, pacing and visual rhythm.",
       "price": "Starting at ₹500 / reel",
       "ctaText": "",
       "ctaHref": "",
@@ -341,65 +455,85 @@ const CONFIG = {
         "title": true,
         "description": true,
         "price": false,
-        "cta": true
+        "cta": false
       },
       "id": "svc_03f4c0",
       "order": 1
     },
     {
       "icon": "🎞️",
-      "title": "Cinematic / Color",
-      "description": "Travel, wedding, brand films + color grading.",
+      "title": "Podcast Editing",
+      "description": "Clean, structured podcast edits for full episodes and\nshort-form clips.",
       "price": "Starting at ₹2,000 / project",
       "ctaText": "",
       "ctaHref": "",
       "ctaNewTab": false,
-      "visible": false,
+      "visible": true,
       "selectable": true,
       "display": {
         "icon": true,
         "title": true,
         "description": true,
         "price": false,
-        "cta": true
+        "cta": false
       },
       "id": "svc_6c2516",
       "order": 2
+    },
+    {
+      "icon": "🎬",
+      "title": "Ads & Promotional",
+      "description": "Video edits for ads and promotional content with clear\nmessaging, pacing and polished visuals.",
+      "price": "",
+      "ctaText": "",
+      "ctaHref": "",
+      "ctaNewTab": false,
+      "visible": true,
+      "selectable": true,
+      "display": {
+        "icon": true,
+        "title": true,
+        "description": true,
+        "price": false,
+        "cta": false
+      },
+      "id": "svc_144331",
+      "order": 3
     }
   ],
   "contact": {
-    "email": "hello@sahil.studio",
-    "instagram": "https://instagram.com/",
-    "youtube": "https://youtube.com/",
+    "email": "sahilvasavahere@gmail.com",
+    "instagram": "https://www.instagram.com/sahilvasavahere/",
+    "youtube": "https://www.youtube.com/@sahilvasavahere",
     "links": [
       {
         "id": "link_instagram",
         "label": "Instagram",
-        "url": "https://instagram.com/",
+        "url": "https://www.instagram.com/sahilvasavahere/",
         "icon": "📷",
         "visible": true
       },
       {
         "id": "link_youtube",
         "label": "YouTube",
-        "url": "https://youtube.com/",
+        "url": "https://www.youtube.com/@sahilvasavahere",
         "icon": "▶",
         "visible": true
       },
       {
         "id": "link_bfeb5a",
         "label": "LinkedIn",
-        "url": "",
-        "icon": "",
+        "url": "https://www.linkedin.com/in/sahilvasavahere/",
+        "icon": "📷",
         "visible": true
       }
     ],
-    "heading": "Let's create something great.",
-    "subheading": "Have an idea? Send me a message — I reply within hours.",
+    "heading": "Let's Work Together",
+    "subheading": "Have a video that needs editing?",
     "form": {
-      "namePlaceholder": "Your Name",
-      "emailPlaceholder": "Your Email",
-      "servicePlaceholder": "Select Service",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "",
+      "servicePlaceholder": "Choose a service",
       "messagePlaceholder": "Tell me about your project...",
       "submitText": "Send Message",
       "visible": true,
@@ -418,7 +552,7 @@ const CONFIG = {
       "serviceRequired": false,
       "messageLabel": "Message",
       "messageRequired": false,
-      "includeOther": false,
+      "includeOther": true,
       "fieldOrder": [
         "name",
         "email",
@@ -455,7 +589,7 @@ const CONFIG = {
     {
       "id": "showreel",
       "type": "showreel",
-      "visible": true,
+      "visible": false,
       "order": 1,
       "title": "Showreel",
       "showInNav": false
@@ -465,13 +599,14 @@ const CONFIG = {
       "type": "projects",
       "visible": true,
       "order": 2,
-      "title": "Selected Work",
+      "title": "My Work",
+      "href": "work.html",
       "settings": {
         "showTabs": true,
         "longLabel": "Long-form",
         "shortLabel": "Short-form",
         "emptyText": "No videos in this category yet.",
-        "subtitle": "Where raw footage becomes something worth watching.",
+        "subtitle": "A selection of my recent editing work.",
         "showSubtitle": true,
         "titleVisible": true,
         "longVisible": true,

@@ -1,0 +1,306 @@
+/* ============================================================================
+   MOTION UPDATE v1 — DELETE THIS BLOCK TO REVERT (rollback-safe, optional)
+   ----------------------------------------------------------------------------
+   WHAT: Smooth entry + navigation, content-first (perceived as responsiveness,
+         not decoration). Total entrance ~400-650ms, interactive immediately.
+   HOW TO DISABLE (no delete): add data-motion="off" to <html>, e.g.
+         <html lang="en" data-motion="off">  — all motion becomes instant/base.
+   HOW TO REMOVE (one step, restores base):
+         1. Delete this file (motion.css) + motion.js,
+         2. Delete the clearly-marked "MOTION UPDATE v1" blocks in
+            index.html (<head> + before </body>) and work.html (same).
+         No other file was touched by this update (style.css / script.js /
+         config.js untouched). Base resumes byte-identical (plus backups).
+   BACKUP: _backups/motion-update-v1-2026-09-11-16-15-39/index.html + work.html
+   LOCKS KEPT: background instant (no body fade/zoom, no background anim),
+         native 16/9 + 9/16 ratios untouched, no image scale/blur/zoom on load,
+         no word-by-word anim, no loader/spinner/intro/skeleton, no 500ms wait,
+         hover≠load, focus/active separate, opacity/transform only, no bounce.
+   ============================================================================ */
+
+/* ---- Speed system (ease-out only, no bounce/elastic, nothing ≥1.5s) ---- */
+:root{
+  --motion-micro: 120ms;    /* smallest step (e.g. instant feedback) */
+  --motion-small: 200ms;    /* underline 180-220, filter fade 200-300, cards */
+  --motion-standard: 260ms; /* header 200-300, hero items, groups */
+  --motion-page: 280ms;     /* View Transitions 200-350 */
+  --motion-long: 600ms;     /* absolute cap reference (never exceeded) */
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1); /* ease-out, no bounce */
+}
+
+/* ---- Kill switch: data-motion="off" restores base instantly ---- */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after{
+  animation: none !important;
+  transition: none !important;
+}
+html[data-motion="off"] .motion-reveal{
+  opacity: 1 !important;
+  transform: none !important;
+}
+/* View Transitions off when killed */
+html[data-motion="off"]::view-transition-old(root),
+html[data-motion="off"]::view-transition-new(root){
+  animation: none !important;
+}
+
+/* ---- BFCache restore: no replay when returning via Back/Forward ---- */
+html.motion-restored *,
+html.motion-restored *::before,
+html.motion-restored *::after{
+  animation: none !important;
+  transition: none !important;
+}
+html.motion-restored .motion-reveal{
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ---- Base reveal: opacity/transform ONLY (perf), no background anim ---- */
+/* NOTE: background is instant by intent — no body/html fade/zoom here. */
+/* Hidden states apply ONLY when JS is present (html.motion-enabled is added
+   by the inline head snippet). No-JS fallback = fully visible content. */
+html.motion-enabled .motion-reveal{
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity var(--motion-standard) var(--motion-ease),
+    transform var(--motion-standard) var(--motion-ease);
+  will-change: opacity, transform;
+}
+html.motion-enabled .motion-reveal.is-visible{
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Kill the base card fadeIn when motion update is active (avoid double anim).
+   Base lives in style.css @media (prefers-reduced-motion: no-preference). */
+html.motion-enabled .card{
+  animation: none !important;
+}
+
+/* ---- Header: 200-300ms translateY(-4px)+opacity (sticky, no layout shift) ---- */
+html.motion-enabled .nav.motion-reveal{
+  transform: translateY(-4px);
+}
+html.motion-enabled .nav.motion-reveal.is-visible{
+  transform: none;
+  transition-duration: var(--motion-standard); /* 260ms ∈ 200-300 */
+}
+
+/* ---- Nav underline: scaleX 180-220ms, center origin ---- */
+html.motion-enabled .nav-links a::after{
+  transform-origin: center;
+  transition: transform var(--motion-small) var(--motion-ease); /* 200ms */
+}
+
+/* ---- Hero sequence: heading 0 / desc 60 / buttons 120 / stats 180ms ----
+   opacity + translateY 6-10px (uses 8px). Overlapping delays + 260ms duration
+   => last item finishes ~440ms, total entrance 400-650ms. Interactive immediately
+   (animations never block pointer events). No word-by-word anim (block-level only). */
+html.motion-enabled #heroTitle.motion-reveal{ transform: translateY(8px); transition-delay: 0ms; }
+html.motion-enabled #heroDesc.motion-reveal{ transform: translateY(8px); transition-delay: 60ms; }
+html.motion-enabled .hero-cta.motion-reveal{ transform: translateY(8px); transition-delay: 120ms; }
+html.motion-enabled #stats.motion-reveal{ transform: translateY(8px); transition-delay: 180ms; }
+html.motion-enabled .hero-media.motion-reveal{ transform: translateY(8px); transition-delay: 100ms; }
+html.motion-enabled #heroTagline.motion-reveal{ transform: translateY(8px); transition-delay: 0ms; }
+
+/* ---- Work intro: heading → desc → count → filter → grid (overlapping) ---- */
+html.motion-enabled #work .section-head h2.motion-reveal,
+html.motion-enabled .work-page .section-head h2.motion-reveal{ transition-delay: 0ms; }
+html.motion-enabled #workSubtitle.motion-reveal,
+html.motion-enabled .work-page .section-head p.motion-reveal{ transition-delay: 60ms; }
+html.motion-enabled #workCount.motion-reveal{ transition-delay: 100ms; }
+html.motion-enabled #work .work-tabs.motion-reveal,
+html.motion-enabled .work-page .work-tabs.motion-reveal{ transition-delay: 140ms; }
+html.motion-enabled #workSectionLong .work-subhead.motion-reveal,
+html.motion-enabled #workSectionShort .work-subhead.motion-reveal{ transition-delay: 0ms; }
+
+/* ---- Cards: whole-unit opacity + translateY(10px), 40ms stagger ----
+   Capped to first 12 via nth-child; 13+ appear with grid fade (no extra wait).
+   11×40ms = 440ms delay + 200ms duration = 640ms max ∈ 500-650ms cap.
+   The CARD moves as one unit — inner img/badge/play never animate on load. */
+html.motion-enabled .grid .card.motion-reveal{
+  transform: translateY(10px);
+  transition-duration: var(--motion-small); /* 200ms for tight cap */
+}
+html.motion-enabled .grid .card.motion-reveal:nth-child(1){ transition-delay: 0ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(2){ transition-delay: 40ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(3){ transition-delay: 80ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(4){ transition-delay: 120ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(5){ transition-delay: 160ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(6){ transition-delay: 200ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(7){ transition-delay: 240ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(8){ transition-delay: 280ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(9){ transition-delay: 320ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(10){ transition-delay: 360ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(11){ transition-delay: 400ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(12){ transition-delay: 440ms; }
+html.motion-enabled .grid .card.motion-reveal:nth-child(n+13){ transition-delay: 0ms; }
+
+/* ---- About: photo + text, translateY(12px), text +60ms ---- */
+html.motion-enabled .about-img.motion-reveal{ transform: translateY(12px); transition-delay: 0ms; }
+html.motion-enabled .about-text.motion-reveal{ transform: translateY(12px); transition-delay: 60ms; }
+
+/* ---- Services: 40ms stagger, same language ---- */
+html.motion-enabled .service-card.motion-reveal{
+  transform: translateY(10px);
+  transition-duration: var(--motion-small);
+}
+html.motion-enabled .service-card.motion-reveal:nth-child(1){ transition-delay: 0ms; }
+html.motion-enabled .service-card.motion-reveal:nth-child(2){ transition-delay: 40ms; }
+html.motion-enabled .service-card.motion-reveal:nth-child(3){ transition-delay: 80ms; }
+html.motion-enabled .service-card.motion-reveal:nth-child(4){ transition-delay: 120ms; }
+html.motion-enabled .service-card.motion-reveal:nth-child(n+5){ transition-delay: 160ms; }
+
+/* ---- Services title + section heads fade with their groups ---- */
+html.motion-enabled #servicesTitle.motion-reveal{ transition-delay: 0ms; }
+
+/* ---- Contact: left / right groups (overlapping, 80ms apart) ---- */
+html.motion-enabled .contact-grid > div.motion-reveal:first-child{ transition-delay: 0ms; }
+html.motion-enabled .contact-grid > div.motion-reveal:last-child{ transition-delay: 80ms; }
+
+/* ---- Footer: fade only (no translate — quiet exit) ---- */
+html.motion-enabled .footer.motion-reveal{
+  transform: none;
+  transition: opacity var(--motion-standard) var(--motion-ease);
+}
+
+/* ---- Images: NO scale 1.15 / blur / zoom on load ----
+   Reveal moves the CARD only. Inner media keeps native aspect-ratio
+   (16/9 long + 9/16 short, untouched here) and appears WITH the card.
+   Play badge appears with the card; its ONLY scale is hover 1.04. */
+html.motion-enabled .card-media,
+html.motion-enabled .card-media img,
+html.motion-enabled .badge,
+html.motion-enabled .play-badge{
+  animation: none !important;
+}
+html.motion-enabled .card.motion-reveal .card-media img{
+  transform: none;
+  filter: none;
+}
+/* Hover scale normalized to 1.04 only (base 1.05-1.06 reverts on removal).
+   Gated to fine pointers so touch never sticks. Load has no img scale. */
+@media (hover: hover) and (pointer: fine){
+  html.motion-enabled .card:hover .play-badge{
+    transform: scale(1.04);
+  }
+  html.motion-enabled .card:hover .card-media img{
+    transform: scale(1.04);
+  }
+}
+
+/* ---- Filter: fade 200-300ms, no flying cards (no FLIP/translate) ---- */
+html.motion-enabled .grid{
+  transition: opacity 220ms ease;
+}
+/* Filter swap dip removed: script.js swaps grids instantly at full opacity, so
+   dimming .motion-filtering grids to 0.25 produced FULL → DIM → FULL flicker. */
+html.motion-enabled .grid.motion-filtering{
+  opacity: 1;
+}
+html.motion-enabled .grid.motion-filtering .card{
+  transform: none !important;
+  transition-delay: 0ms !important;
+}
+/* During programmatic filter swaps, new cards fade (opacity only). */
+html[data-motion-filter="true"] .grid .card.motion-reveal{
+  transition-delay: 0ms !important;
+}
+
+/* ---- Hover ≠ load; focus/active are separate languages ----
+   Hover = border/shadow (base, untouched). Focus = outline (base yellow ring,
+   untouched). Active = 0.98 press (added here, removable). */
+html.motion-enabled .btn:active,
+html.motion-enabled .card:active,
+html.motion-enabled .tab-btn:active{
+  transform: scale(0.98);
+}
+
+/* ---- Navigation: native View Transitions API 200-350ms where supported ----
+   Declarative cross-document (Chrome/Edge 126+). No JS interception, no 500ms
+   wait, no loader/spinner/intro — unsupported browsers navigate instantly
+   (normal MPA load). Opacity/transform only, ease-out. Fonts stable: no
+   font-size/weight animation, so no layout jump. Skeletons: none. */
+@view-transition{
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root){
+  animation-duration: var(--motion-page); /* 280ms ∈ 200-350 */
+  animation-timing-function: var(--motion-ease);
+}
+::view-transition-old(root){
+  animation-name: motion-page-out;
+}
+::view-transition-new(root){
+  animation-name: motion-page-in;
+}
+@keyframes motion-page-in{
+  from{ opacity: 0; transform: translateY(4px); }
+  to{ opacity: 1; transform: none; }
+}
+@keyframes motion-page-out{
+  from{ opacity: 1; }
+  to{ opacity: 0; }
+}
+
+/* ---- Mobile: same language, smaller travel + tighter stagger ---- */
+@media (max-width: 640px){
+  html.motion-enabled .motion-reveal{
+    transform: translateY(6px);
+  }
+  html.motion-enabled .grid .card.motion-reveal{
+    transform: translateY(6px);
+  }
+  html.motion-enabled .about-img.motion-reveal,
+  html.motion-enabled .about-text.motion-reveal{
+    transform: translateY(8px);
+  }
+  /* Stagger tightened to 20-30ms on mobile (uses 24ms). */
+  html.motion-enabled .grid .card.motion-reveal:nth-child(2){ transition-delay: 24ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(3){ transition-delay: 48ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(4){ transition-delay: 72ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(5){ transition-delay: 96ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(6){ transition-delay: 120ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(7){ transition-delay: 144ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(8){ transition-delay: 168ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(9){ transition-delay: 192ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(10){ transition-delay: 216ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(11){ transition-delay: 240ms; }
+  html.motion-enabled .grid .card.motion-reveal:nth-child(12){ transition-delay: 264ms; }
+  html.motion-enabled .service-card.motion-reveal:nth-child(2){ transition-delay: 24ms; }
+  html.motion-enabled .service-card.motion-reveal:nth-child(3){ transition-delay: 48ms; }
+  html.motion-enabled .service-card.motion-reveal:nth-child(4){ transition-delay: 72ms; }
+}
+
+/* ---- prefers-reduced-motion: instant / short opacity only ---- */
+@media (prefers-reduced-motion: reduce){
+  html.motion-enabled .motion-reveal{
+    transform: none !important;
+    transition: opacity 120ms ease !important;
+  }
+  html.motion-enabled .nav.motion-reveal{
+    transform: none !important;
+  }
+  html.motion-enabled .nav-links a::after{
+    transition: none !important;
+  }
+  html.motion-enabled .card:hover .card-media img,
+  html.motion-enabled .card:hover .play-badge,
+  html.motion-enabled .btn:active,
+  html.motion-enabled .card:active{
+    transform: none !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    animation-duration: 1ms !important;
+  }
+  @keyframes motion-page-in{
+    from{ opacity: 0; }
+    to{ opacity: 1; }
+  }
+}

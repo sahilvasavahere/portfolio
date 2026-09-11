@@ -1,15 +1,14 @@
-# Sahil — Portfolio (Website Release)
+# Sahil — Portfolio
 
 Public deployable website. Clean, self-contained, no editor required.
 
 ## Run locally
 ```bash
-# from this folder (Website Release)
+# from this folder
 python -m http.server 8000
 # then open
 http://localhost:8000
 ```
-Or double-click `../Preview.bat` from the parent `Portfolio` folder.
 
 Do **not** open `index.html` directly via `file://` — YouTube embeds need HTTP (Error 153).
 
@@ -42,7 +41,7 @@ git push
 
 ## Create GitHub repo (when ready)
 ```bash
-cd "D:\Software Development\Portfolio\Website Release"
+cd "D:\Software Development\Portfolio\Portfolio Live (GitHub)"
 git init
 git add .
 git commit -m "Initial portfolio release v2.1"
@@ -69,15 +68,19 @@ git push origin v2.1.0
 
 ## Files in this release
 ```
-index.html      — website
-style.css       — styles (Vidstack + responsive)
-script.js       — rendering + Vidstack player
+index.html      — homepage
+work.html       — full work archive
+style.css       — styles (responsive)
+motion.css      — motion system
+script.js       — rendering + player
+motion.js       — scroll reveals + transitions
+telemetry.js    — analytics scaffold (inert by default)
 config.js       — content (single source of truth)
-assets/images/  — thumbnails / photos
+assets/images/  — portrait photo
 ```
 `data/content.json` is not required for the public site (kept in parent for editor).
 
 ## Notes
 - `config.js` is the source the site reads (`<script src="config.js">` with cache-bust).
-- Editor writes to this folder directly when `Website Release` exists.
+- Editor writes to this folder directly when `Portfolio Live (GitHub)` exists.
 - Keep `assets/images` under 5MB total for fast loads.
