@@ -76,7 +76,11 @@ const CONFIG = {
   "projects": [
     {
       "id": "proj_001",
-      "focus": {"x": 0.502, "y": 0.427, "type": "face"},
+      "focus": {
+        "x": 0.502,
+        "y": 0.427,
+        "type": "face"
+      },
       "title": "7 Things I Gave Up",
       "category": "Talking Head",
       "format": "long",
@@ -100,7 +104,11 @@ const CONFIG = {
     },
     {
       "id": "proj_003",
-      "focus": {"x": 0.448, "y": 0.437, "type": "face"},
+      "focus": {
+        "x": 0.448,
+        "y": 0.437,
+        "type": "face"
+      },
       "title": "AI Is Replacing Jobs. Now What?",
       "category": "Talking Head",
       "format": "long",
@@ -124,7 +132,11 @@ const CONFIG = {
     },
     {
       "id": "proj_005",
-      "focus": {"x": 0.58, "y": 0.497, "type": "face"},
+      "focus": {
+        "x": 0.58,
+        "y": 0.497,
+        "type": "face"
+      },
       "title": "The Idea Matrix",
       "category": "Talking Head",
       "format": "long",
@@ -148,7 +160,11 @@ const CONFIG = {
     },
     {
       "id": "proj_006",
-      "focus": {"x": 0.453, "y": 0.367, "type": "face"},
+      "focus": {
+        "x": 0.453,
+        "y": 0.367,
+        "type": "face"
+      },
       "title": "Amazon KDP Explained",
       "category": "Talking Head",
       "format": "long",
@@ -195,7 +211,11 @@ const CONFIG = {
     },
     {
       "id": "proj_short_kq",
-      "focus": {"x": 0.498, "y": 0.343, "type": "face"},
+      "focus": {
+        "x": 0.498,
+        "y": 0.343,
+        "type": "face"
+      },
       "title": "Soft Skills",
       "category": "Short",
       "format": "short",
@@ -219,7 +239,11 @@ const CONFIG = {
     },
     {
       "id": "proj_aec8d2",
-      "focus": {"x": 0.537, "y": 0.509, "type": "face"},
+      "focus": {
+        "x": 0.537,
+        "y": 0.509,
+        "type": "face"
+      },
       "title": "The Anti-Textbook PM",
       "category": "Podcast",
       "format": "long",
@@ -243,7 +267,11 @@ const CONFIG = {
     },
     {
       "id": "proj_b176a5",
-      "focus": {"x": 0.562, "y": 0.497, "type": "face"},
+      "focus": {
+        "x": 0.562,
+        "y": 0.497,
+        "type": "face"
+      },
       "title": "AI Fashion Revolution!",
       "category": "Podcast",
       "format": "long",
@@ -267,7 +295,11 @@ const CONFIG = {
     },
     {
       "id": "proj_51f458",
-      "focus": {"x": 0.758, "y": 0.467, "type": "face"},
+      "focus": {
+        "x": 0.758,
+        "y": 0.467,
+        "type": "face"
+      },
       "title": "Reverse Designing in product management",
       "category": "Talking Head",
       "format": "long",
@@ -314,7 +346,11 @@ const CONFIG = {
     },
     {
       "id": "proj_301465",
-      "focus": {"x": 0.48, "y": 0.604, "type": "face"},
+      "focus": {
+        "x": 0.48,
+        "y": 0.604,
+        "type": "face"
+      },
       "title": "KYC and KYM",
       "category": "Short",
       "format": "short",
@@ -416,7 +452,11 @@ const CONFIG = {
       }
     ],
     "image": "assets/images/1789137190608.jpg",
-    "focus": {"x": 0.483, "y": 0.466, "type": "face"},
+    "focus": {
+      "x": 0.483,
+      "y": 0.466,
+      "type": "face"
+    },
     "visible": true,
     "eyebrow": "ABOUT ME",
     "imageAlt": "Editor who cares about story, not just transitions.",
@@ -542,7 +582,7 @@ const CONFIG = {
     "subheading": "Have a video that needs editing?",
     "form": {
       "namePlaceholder": "Your name",
-      "emailPlaceholder": "",
+      "emailPlaceholder": "Your email",
       "servicePlaceholder": "Choose a service",
       "messagePlaceholder": "Tell me about your project...",
       "submitText": "Send Message",
