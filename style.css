@@ -938,6 +938,7 @@ body:has(.mobile-menu.open)::after{content:"";position:fixed;top:64px;left:0;rig
   .grid-long,#workGridLong,#projectGridLong{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .grid-short,#workGridShort,#projectGridShort{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 }
+
 /* Card dims never vw-scaled: fr width + aspect-ratio height only, fixed px internals.
    Work Long gap 20px desktop (20px spec, token 20); Short gap 20px (in 20-24 spec). */
 .card{width:100%;min-width:0;overflow:hidden;border-radius:14px;border:1px solid var(--border)}
@@ -1187,3 +1188,12 @@ body:has(.mobile-menu.open)::after{content:"";position:fixed;top:64px;left:0;rig
   .card[data-youtube-id]:hover .play-badge,.card[data-youtube-url]:hover .play-badge{transform:none;box-shadow:none;filter:none}
   .card-media::after,.card:hover .card-media::after{opacity:0}
 }
+
+/* WORK CARD CONTENT — 2-line title reserve (precision fix, end-of-cascade).
+   Titles clamp at 2 lines (existing); this reserves the 2-line area so
+   cards in a row align without fixed card heights. Placed last because an
+   earlier shared-renderer rules set min-height:0 (including an ID-scoped
+   short-grid rule). Selector list mirrors those so both formats reserve.
+   em-based (2 × 1.35): scales with each grid's title size. Meta stays
+   single-line ellipsis. */
+.card-body h3,.grid-short .card-body h3,#projectGridShort .card-body h3,#workGridShort .card-body h3{min-height:2.7em}
