@@ -1611,10 +1611,13 @@ function _ytqEnsureApi(cb){
   }catch(_){ try{ cb(false); }catch(_){} }
 }
 function _ytqRequestOnce(player, token){
+  // Re-asserted on EVERY playing transition (not one-shot): recovers best
+  // quality after Auto downgrades from rebuffering/seeks. Still advisory —
+  // YouTube caps by bandwidth/player-size/user settings. Token guard keeps
+  // stale players from touching a newer video. Cheap: suggestion only.
   try{
     var cur = window._ytq;
-    if(!cur || cur.token !== token || cur.done) return;
-    cur.done = true;
+    if(!cur || cur.token !== token) return;
     var levels = player.getAvailableQualityLevels
       ? player.getAvailableQualityLevels() : [];
     var best = _ytqPickBest(levels);
@@ -1641,6 +1644,18 @@ function YTQualityEnhance(iframeEl){
         onStateChange: function(ev){
           if(!ev || ev.data !== 1) return; // 1 = PLAYING
           _ytqRequestOnce(player, token);
+          // Delayed re-assert: YouTube's bandwidth estimate improves a
+          // few seconds in, and early suggestions get overridden (we've
+          // measured hd720-held-while-hd1080-offered). Token-guarded and
+          // modal-guarded; fires once per playing transition at most.
+          try{
+            setTimeout(function(){
+              try{
+                if(!document.contains(iframeEl)) return;
+                _ytqRequestOnce(player, token);
+              }catch(_){}
+            }, 4000);
+          }catch(_){}
         }
       }});
       window._ytq = {player: player, token: token, done: false};
